@@ -1,1 +1,7 @@
 *~
+*.obj
+*.mtl
+*.zip
+*.cache/
+*.json
+*.png
