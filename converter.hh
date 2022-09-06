@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
+#include <filesystem>
+#include <Magick++.h>
 
 const static std::string SEPARATOR = " ";
 const static std::string TEX_DIRECTIVE = "tex";
@@ -13,13 +15,15 @@ const static std::string TEX_PREFIX = "tex_";
 const static std::string TEX_EXT = ".bmp";
 
 class texture_converter {
-	std::string _file;
-	std::istream _in;
-	std::ostream &_out;
-
+	Magick::Image _image;
 public:
+	const std::filesystem::path from_path, to_path;
+
 	texture_converter() = delete;
-	texture_converter(const std::string from, std::ostream &out);
+	texture_converter(const std::filesystem::path &from,
+			const std::filesystem::path &to);
+	texture_converter(const std::string &from,
+			const std::string &to);
 	~texture_converter();
 
 	void convert();
@@ -48,7 +52,7 @@ private:
 	void convert_texture(const aiTexture *texture);
 	void convert_raw_texture(const aiTexture *texture);
 	void convert_compressed_texture(const aiTexture *texture);
-	static std::string texture_name(const aiTexture *texture);
+	static std::string texture_name(const std::string &path);
 };
 
 #endif
