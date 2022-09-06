@@ -5,3 +5,7 @@
 *.cache/
 *.json
 *.png
+\#*\#
+*.o
+*.bmp
+converter
