@@ -31,13 +31,25 @@ converter::converter(const std::string &file, std::ostream &out)
     : _file(file), _out(out), _importer(),
       _scene(_importer.ReadFile(_file.c_str(), aiProcess_Triangulate)) {}
 
-void converter::convert() { write_global_textures(); }
+void converter::convert() {
+        write_global_textures();
+        write_materials();
+}
 
 void converter::write_global_textures() {
         const std::span textures(_scene->mTextures, _scene->mNumTextures);
 
+        // TODO make texture const
         for (aiTexture *texture : textures) {
                 convert_texture(texture);
+        }
+}
+
+void converter::write_materials() {
+        const std::span materials(_scene->mMaterials, _scene->mNumMaterials);
+
+        for (const aiMaterial *material : materials) {
+                write_material(material);
         }
 }
 
@@ -47,6 +59,30 @@ void converter::convert_texture(const aiTexture *texture) {
         } else {
                 convert_compressed_texture(texture);
         }
+}
+
+void converter::write_material(const aiMaterial *material) {
+        for (std::size_t type = 0; type <= AI_TEXTURE_TYPE_MAX; ++type) {
+                std::size_t idx = 0;
+                while (true) {
+                        aiString path;
+                        unsigned int uv_idx;
+                        if (material->GetTexture(
+                                static_cast<aiTextureType>(type), idx, &path,
+                                nullptr, &uv_idx, nullptr, nullptr)
+                            != AI_SUCCESS) {
+                                break;
+                        }
+                        if (std::string(path.C_Str()).empty() == false
+                            && !_textures.contains(path.C_Str()))
+                                convert_compressed_texture(path.C_Str());
+                        ++idx;
+                }
+        }
+        _out << MAT_BEGIN_DIRECTIVE << SEPARATOR
+             << material->GetName().C_Str() << std::endl;
+
+        _out << MAT_END_DIRECTIVE << std::endl;
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {

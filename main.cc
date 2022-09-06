@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 	}
 	const std::string file(argv[1]);
 	try {
-		texture_converter conv(file, file + ".bmp");
+                converter conv(file, std::cout);
 		conv.convert();
 	} catch (const std::exception &ex) {
 		std::cout << argv[0] << ": " << ex.what() << std::endl;

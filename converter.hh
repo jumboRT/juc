@@ -11,6 +11,8 @@
 
 const static std::string SEPARATOR = " ";
 const static std::string TEX_DIRECTIVE = "tex";
+const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
+const static std::string MAT_END_DIRECTIVE = "mat_end";
 const static std::string TEX_PREFIX = "tex_";
 const static std::string TEX_EXT = ".bmp";
 
@@ -48,9 +50,12 @@ class converter {
 
       private:
         void write_global_textures();
+        void write_materials();
 
+        void write_material(const aiMaterial *material);
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
+        void convert_compressed_texture(const std::string &path);
         void convert_compressed_texture(const aiTexture *texture);
         static std::string texture_name(const std::string &path);
 };
