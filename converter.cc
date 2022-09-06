@@ -59,11 +59,17 @@ std::string converter::texture_name(const std::string &path) {
         return std::filesystem::path(path).stem().string();
 }
 
-void converter::convert_compressed_texture(const aiTexture *texture) {
-        const std::string name = texture_name(texture->mFilename.C_Str());
-        _out << TEX_DIRECTIVE << SEPARATOR << TEX_PREFIX << name << std::endl;
-        std::filesystem::path tex_path
+void converter::convert_compressed_texture(const std::string &tex_path) {
+        const std::string name = texture_name(tex_path);
+
+        std::filesystem::path out_path
             = std::filesystem::current_path() / scene_name / (name + TEX_EXT);
-        texture_converter(texture->mFilename.C_Str(), tex_path.string())
-            .convert();
+        _out << TEX_DIRECTIVE << SEPARATOR << TEX_PREFIX << name << SEPARATOR
+             << out_path.string() << std::endl;
+        texture_converter(tex_path, out_path.string()).convert();
+        _textures[tex_path] = name;
+}
+
+void converter::convert_compressed_texture(const aiTexture *texture) {
+        convert_compressed_texture(texture->mFilename.C_Str());
 }
