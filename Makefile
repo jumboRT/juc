@@ -1,13 +1,13 @@
-NAME			:= converter
+NAME		:= converter
 SOURCE_FILES	:= main.cc converter.cc
 OBJECT_FILES	:= $(addsuffix .o,$(SOURCE_FILES))
 
-CXX				:= g++
+CXX		:= g++
 
-CXXFLAGS		:= -Wall -Wextra -std=c++20 -g3 -Og 
-				   `Magick++-config --cppflags --cxxflags`
-LFLAGS			:= -lassimp -fsanitize=memory -fsanitize-memory-track-origins \
-				   `Magick++-config --ldflags --libs`
+CXXFLAGS	:= -Wall -Wextra -std=c++20 -g3 -Og  \
+		   `Magick++-config --cppflags --cxxflags`
+LFLAGS		:= -lassimp \
+		   `Magick++-config --ldflags --libs`
 
 $(NAME): $(OBJECT_FILES)
 	$(CXX) -o $(NAME) $(OBJECT_FILES) $(LFLAGS) 
