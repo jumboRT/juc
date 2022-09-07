@@ -99,12 +99,7 @@ void converter::write_material_diffuse(const aiMaterial *material) {
                 aiString path;
                 material->GetTexture(aiTextureType_DIFFUSE, idx, &path,
                                      nullptr, nullptr, nullptr, nullptr);
-                const std::string path_str(path.C_Str());
-                if (path_str.empty()) {
-                        write_diffuse_directive(diffuse_color);
-                } else {
-                        write_diffuse_directive(diffuse_color, path_str);
-                }
+                write_diffuse_directive(diffuse_color, path.C_Str());
         }
 }
 
@@ -115,9 +110,14 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color) {
 
 void converter::write_diffuse_directive(aiColor3D diffuse_color,
                                         const std::string &tex_path) {
-        _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << 1
-             << SEPARATOR << MAT_FILTER << SEPARATOR << TEX_PREFIX
-             << _textures[tex_path] << SEPARATOR << diffuse_color << std::endl;
+        if (tex_path.empty()) {
+                write_diffuse_directive(diffuse_color);
+        } else {
+                _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << 1
+                     << SEPARATOR << MAT_FILTER << SEPARATOR << TEX_PREFIX
+                     << _textures[tex_path] << SEPARATOR << diffuse_color
+                     << std::endl;
+        }
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {
