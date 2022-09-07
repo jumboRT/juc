@@ -58,6 +58,9 @@ class converter {
 
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);
+        void write_diffuse_directive(aiColor3D diffuse_color);
+        void write_diffuse_directive(aiColor3D diffuse_color,
+                                     const std::string &tex_path);
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
