@@ -12,6 +12,10 @@
 const static std::string SEPARATOR = " ";
 const static std::string TEX_DIRECTIVE = "tex";
 const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
+const static std::string MAT_PREFIX = "mat_";
+const static std::string MAT_INDENT = "    ";
+const static std::string MAT_DIFFUSE_DIRECTIVE = "diffuse";
+const static std::string MAT_FILTER = "filter";
 const static std::string MAT_END_DIRECTIVE = "mat_end";
 const static std::string TEX_PREFIX = "tex_";
 const static std::string TEX_EXT = ".bmp";
@@ -53,11 +57,14 @@ class converter {
         void write_materials();
 
         void write_material(const aiMaterial *material);
+        void write_material_diffuse(const aiMaterial *material);
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
         void convert_compressed_texture(const aiTexture *texture);
         static std::string texture_name(const std::string &path);
 };
+
+std::ostream &operator<<(std::ostream &stream, const aiColor3D &color);
 
 #endif

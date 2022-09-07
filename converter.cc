@@ -80,9 +80,38 @@ void converter::write_material(const aiMaterial *material) {
                 }
         }
         _out << MAT_BEGIN_DIRECTIVE << SEPARATOR
-             << material->GetName().C_Str() << std::endl;
-
+             << MAT_PREFIX << material->GetName().C_Str() << std::endl;
+        write_material_diffuse(material);
         _out << MAT_END_DIRECTIVE << std::endl;
+}
+
+void converter::write_material_diffuse(const aiMaterial *material) {
+        aiColor3D diffuse_color;
+
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuse_color);
+        const std::size_t count
+            = material->GetTextureCount(aiTextureType_DIFFUSE);
+        if (count == 0) {
+                _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << 1
+                     << SEPARATOR << diffuse_color << std::endl;
+                return;
+        }
+        for (std::size_t idx = 0; idx < count; ++idx) {
+                aiString path;
+                material->GetTexture(aiTextureType_DIFFUSE, idx, &path,
+                                     nullptr, nullptr, nullptr, nullptr);
+                const std::string path_str(path.C_Str());
+                if (path_str.empty()) {
+                        _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE
+                             << SEPARATOR << 1 << SEPARATOR << diffuse_color
+                             << std::endl;
+                } else {
+                        _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE
+                             << SEPARATOR << 1 << SEPARATOR << MAT_FILTER
+                             << SEPARATOR << TEX_PREFIX << _textures[path_str]
+                             << SEPARATOR << diffuse_color << std::endl;
+                }
+        }
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {
@@ -108,4 +137,9 @@ void converter::convert_compressed_texture(const std::string &tex_path) {
 
 void converter::convert_compressed_texture(const aiTexture *texture) {
         convert_compressed_texture(texture->mFilename.C_Str());
+}
+
+std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
+        return stream << "(" << color.r << "," << color.g << "," << color.b
+                      << ")";
 }
