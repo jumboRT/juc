@@ -7,6 +7,46 @@
 #include <span>
 #include <stdexcept>
 
+vertex::vertex(math::vector<float, 3> point) : point(point) {}
+
+vertex::vertex(math::vector<float, 3> point, math::vector<float, 2> uv)
+    : point(point), uv(uv) {}
+
+vertex::vertex(math::vector<float, 3> point, math::vector<float, 2> uv,
+               math::vector<float, 3> normal)
+    : point(point), uv(uv), normal(normal) {}
+
+vertex::vertex(vertex &&other) noexcept {
+        swap(other);
+}
+
+vertex &vertex::operator=(const vertex &other) {
+        if (this != &other) {
+                point = other.point;
+                uv = other.uv;
+                normal = other.normal;
+        }
+        return *this;
+}
+
+vertex &vertex::operator=(vertex &&other) noexcept {
+        swap(other);
+        return *this;
+}
+
+bool vertex::operator==(const vertex &other) const {
+        if (this == &other)
+                return true;
+        return point == other.point && uv == other.uv
+               && normal == other.normal;
+};
+
+void vertex::swap(vertex &other) noexcept {
+        point.swap(other.point);
+        std::swap(uv, other.uv);
+        std::swap(normal, other.normal);
+}
+
 texture_converter::texture_converter(const std::filesystem::path &from,
                                      const std::filesystem::path &to)
     : _image(), from_path(from), to_path(to) {
@@ -34,6 +74,7 @@ converter::converter(const std::string &file, std::ostream &out)
 void converter::convert() {
         write_global_textures();
         write_materials();
+        write_meshes();       
 }
 
 void converter::write_global_textures() {
@@ -50,6 +91,14 @@ void converter::write_materials() {
 
         for (const aiMaterial *material : materials) {
                 write_material(material);
+        }
+}
+
+void converter::write_meshes() {
+        const std::span meshes(_scene->mMeshes, _scene->mNumMeshes);
+
+        for (const aiMesh *mesh : meshes) {
+                write_mesh(mesh);
         }
 }
 
@@ -118,6 +167,61 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color,
                      << _textures[tex_path] << SEPARATOR << diffuse_color
                      << std::endl;
         }
+}
+
+void converter::write_mesh(const aiMesh *mesh) {
+        const std::span vertices(mesh->mVertices, mesh->mNumVertices);
+        const std::span normals(mesh->mNormals, mesh->mNormals == nullptr
+                                                    ? 0
+                                                    : mesh->mNumVertices);
+        const std::span uvs(
+            mesh->mTextureCoords[0],
+            mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
+
+        for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
+                vertex vert;
+                vert.point
+                    = { vertices[idx].x, vertices[idx].y, vertices[idx].z };
+                if (uvs.size() > 0) {
+                        vert.uv = { uvs[idx].x, uvs[idx].y };
+                }
+                if (normals.size() > 0) {
+                        vert.normal = { normals[idx].x, normals[idx].y,
+                                        normals[idx].z };
+                }
+                if (_vertices.contains(vert)) {
+                        continue;
+                }
+                _vertices[vert] = _vertices.size();
+                write_vertex(vert);
+        }
+        const std::span faces(mesh->mFaces, mesh->mNumFaces);
+        //TODO use for_each_n
+        for (const aiFace &face : faces) {
+                write_face(face);
+        }
+}
+
+void converter::write_vertex(const vertex &vertex) {
+        if (vertex.uv.has_value() && vertex.normal.has_value()) {
+                _out << VTN_DIRECTIVE << SEPARATOR << vertex.point
+                     << SEPARATOR << vertex.uv.value() << SEPARATOR
+                     << vertex.normal.value() << std::endl;
+        } else if (vertex.uv.has_value()) {
+                _out << VT_DIRECTIVE << SEPARATOR << vertex.point
+                     << SEPARATOR << vertex.uv.value() << std::endl;
+        } else if (vertex.normal.has_value()) {
+                _out << VN_DIRECTIVE << SEPARATOR << vertex.point
+                     << SEPARATOR << vertex.normal.value() << std::endl;
+        } else {
+                _out << V_DIRECTIVE << SEPARATOR << vertex.point << std::endl;
+        }
+}
+
+void converter::write_face(const aiFace &face) {
+        _out << FACE_DIRECTIVE << SEPARATOR << face.mIndices[0] << SEPARATOR
+             << face.mIndices[1] << SEPARATOR << face.mIndices[2]
+             << std::endl;
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {
