@@ -16,9 +16,7 @@ vertex::vertex(math::vector<float, 3> point, math::vector<float, 2> uv,
                math::vector<float, 3> normal)
     : point(point), uv(uv), normal(normal) {}
 
-vertex::vertex(vertex &&other) noexcept {
-        swap(other);
-}
+vertex::vertex(vertex &&other) noexcept { swap(other); }
 
 vertex &vertex::operator=(const vertex &other) {
         if (this != &other) {
@@ -74,7 +72,7 @@ converter::converter(const std::string &file, std::ostream &out)
 void converter::convert() {
         write_global_textures();
         write_materials();
-        write_meshes();       
+        write_meshes();
 }
 
 void converter::write_global_textures() {
@@ -196,7 +194,7 @@ void converter::write_mesh(const aiMesh *mesh) {
                 write_vertex(vert);
         }
         const std::span faces(mesh->mFaces, mesh->mNumFaces);
-        //TODO use for_each_n
+        // TODO use for_each_n
         for (const aiFace &face : faces) {
                 write_face(face);
         }
@@ -204,15 +202,15 @@ void converter::write_mesh(const aiMesh *mesh) {
 
 void converter::write_vertex(const vertex &vertex) {
         if (vertex.uv.has_value() && vertex.normal.has_value()) {
-                _out << VTN_DIRECTIVE << SEPARATOR << vertex.point
-                     << SEPARATOR << vertex.uv.value() << SEPARATOR
-                     << vertex.normal.value() << std::endl;
+                _out << VTN_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
+                     << vertex.uv.value() << SEPARATOR << vertex.normal.value()
+                     << std::endl;
         } else if (vertex.uv.has_value()) {
-                _out << VT_DIRECTIVE << SEPARATOR << vertex.point
-                     << SEPARATOR << vertex.uv.value() << std::endl;
+                _out << VT_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
+                     << vertex.uv.value() << std::endl;
         } else if (vertex.normal.has_value()) {
-                _out << VN_DIRECTIVE << SEPARATOR << vertex.point
-                     << SEPARATOR << vertex.normal.value() << std::endl;
+                _out << VN_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
+                     << vertex.normal.value() << std::endl;
         } else {
                 _out << V_DIRECTIVE << SEPARATOR << vertex.point << std::endl;
         }
@@ -220,8 +218,7 @@ void converter::write_vertex(const vertex &vertex) {
 
 void converter::write_face(const aiFace &face) {
         _out << FACE_DIRECTIVE << SEPARATOR << face.mIndices[0] << SEPARATOR
-             << face.mIndices[1] << SEPARATOR << face.mIndices[2]
-             << std::endl;
+             << face.mIndices[1] << SEPARATOR << face.mIndices[2] << std::endl;
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {

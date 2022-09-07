@@ -4,13 +4,13 @@
 #include <Magick++.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+#include <boost/container_hash/hash.hpp>
 #include <filesystem>
+#include <initializer_list>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <unordered_map>
-#include <optional>
-#include <initializer_list>
-#include <boost/container_hash/hash.hpp>
 
 const static std::string SEPARATOR = " ";
 const static std::string TEX_DIRECTIVE = "tex";
@@ -29,10 +29,9 @@ const static std::string VN_DIRECTIVE = "y";
 const static std::string V_DIRECTIVE = "v";
 
 namespace math {
-template<typename T, std::size_t N>
-using vector = std::array<T, N>;
+template <typename T, std::size_t N> using vector = std::array<T, N>;
 
-template<typename T, std::size_t N>
+template <typename T, std::size_t N>
 std::size_t hash_value(const vector<T, N> &vector) {
         return boost::hash<std::array<T, N> >(vector);
 }
@@ -62,8 +61,7 @@ struct vertex {
         void swap(vertex &other) noexcept;
 };
 
-template<>
-struct std::hash<vertex> {
+template <> struct std::hash<vertex> {
         std::size_t operator()(const vertex &vert) const noexcept {
                 std::size_t seed = 0;
                 boost::hash_combine(seed, vert.point);
