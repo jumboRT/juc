@@ -71,22 +71,25 @@ texture_converter::~texture_converter() {}
 
 void texture_converter::convert() { _image.write(to_path.string()); }
 
-converter::converter(const std::string &file, std::ostream &out, const std::string &name) 
+converter::converter(const std::string &file, std::ostream &out,
+                     const std::string &name)
     : _file(file), _out(out), _importer(),
       _scene(_importer.ReadFile(_file.c_str(), aiProcess_Triangulate)),
-      scene_name(name) { }
+      scene_name(name) {}
 
 void converter::convert() {
         write_global_textures();
         write_materials();
-	write_node(_scene->mRootNode);
+        write_node(_scene->mRootNode);
 }
 
 void converter::write_node(const aiNode *node) {
-	std::for_each_n(node->mMeshes, node->mNumMeshes,
-			[this, node](unsigned int idx) { write_mesh(_scene->mMeshes[idx], node->mTransformation); });
-	std::for_each_n(node->mChildren, node->mNumChildren,
-			[this](const aiNode *child) { write_node(child); });
+        std::for_each_n(
+            node->mMeshes, node->mNumMeshes, [this, node](unsigned int idx) {
+                    write_mesh(_scene->mMeshes[idx], node->mTransformation);
+            });
+        std::for_each_n(node->mChildren, node->mNumChildren,
+                        [this](const aiNode *child) { write_node(child); });
 }
 
 void converter::write_global_textures() {
@@ -127,10 +130,12 @@ void converter::write_material(const aiMaterial *material) {
                         ++idx;
                 }
         }
+	const std::string name = material->GetName().C_Str();
         _out << MAT_BEGIN_DIRECTIVE << SEPARATOR << MAT_PREFIX
-             << material->GetName().C_Str() << std::endl;
+             << name << std::endl;
         write_material_diffuse(material);
         _out << MAT_END_DIRECTIVE << std::endl;
+	_materials.push_back(name);
 }
 
 void converter::write_material_diffuse(const aiMaterial *material) {
@@ -168,7 +173,8 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color,
         }
 }
 
-void converter::write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation) {
+void converter::write_mesh(const aiMesh *mesh,
+                           const aiMatrix4x4 &transformation) {
         const std::span vertices(mesh->mVertices, mesh->mNumVertices);
         const std::span normals(mesh->mNormals, mesh->mNormals == nullptr
                                                     ? 0
@@ -176,21 +182,20 @@ void converter::write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation
         const std::span uvs(
             mesh->mTextureCoords[0],
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
-
+	_out << MAT_USE_DIRECTIVE << SEPARATOR << _materials[mesh->mMaterialIndex] << std::endl;
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
-		aiVector3D point = vertices[idx];
-		point *= transformation;
+                aiVector3D point = vertices[idx];
+                point *= transformation;
                 vertex vert;
-                vert.point
-                    = { point.x, point.y, point.z };
+                vert.point = { point.x, point.y, point.z };
                 if (uvs.size() > 0) {
                         vert.uv = { uvs[idx].x, uvs[idx].y };
                 }
                 if (normals.size() > 0) {
-			aiVector3D normal = normals[idx];
-			normal *= transformation; //TODO check if this transformation is needed
-                        vert.normal = { normal.x, normal.y,
-                                        normal.z };
+                        aiVector3D normal = normals[idx];
+                        normal *= transformation; // TODO check if this
+                                                  // transformation is needed
+                        vert.normal = { normal.x, normal.y, normal.z };
                 }
                 if (_vertices.contains(vert)) {
                         continue;
@@ -198,8 +203,8 @@ void converter::write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation
                 _vertices[vert] = _vertices.size();
                 write_vertex(vert);
         }
-	std::for_each_n(mesh->mFaces, mesh->mNumFaces, 
-			[this](const aiFace &face) { write_face(face); });
+        std::for_each_n(mesh->mFaces, mesh->mNumFaces,
+                        [this](const aiFace &face) { write_face(face); });
 }
 
 void converter::write_vertex(const vertex &vertex) {

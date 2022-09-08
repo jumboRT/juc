@@ -3,19 +3,20 @@
 
 #include <Magick++.h>
 #include <assimp/Importer.hpp>
-#include <assimp/scene.h>
 #include <assimp/matrix4x4.h>
+#include <assimp/scene.h>
 #include <boost/container_hash/hash.hpp>
 #include <filesystem>
 #include <initializer_list>
 #include <iostream>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
-#include <span>
 
 const static std::string SEPARATOR = " ";
 const static std::string TEX_DIRECTIVE = "tex";
+const static std::string MAT_USE_DIRECTIVE = "mat_use";
 const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
 const static std::string MAT_PREFIX = "mat_";
 const static std::string MAT_INDENT = "    ";
@@ -95,12 +96,14 @@ class converter {
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
         std::unordered_map<vertex, std::size_t> _vertices;
+	std::vector<std::string> _materials;
 
       public:
         const std::string scene_name;
 
         converter() = delete;
-	converter(const std::string &file, std::ostream &out, const std::string &name);
+        converter(const std::string &file, std::ostream &out,
+                  const std::string &name);
 
         void convert();
 
@@ -109,13 +112,13 @@ class converter {
       private:
         void write_global_textures();
         void write_materials();
-        
+
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);
         void write_diffuse_directive(aiColor3D diffuse_color);
         void write_diffuse_directive(aiColor3D diffuse_color,
                                      const std::string &tex_path);
-	void write_node(const aiNode *node);
+        void write_node(const aiNode *node);
         void write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation);
         void write_vertex(const vertex &vert);
         void write_face(const aiFace &face);

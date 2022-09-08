@@ -14,14 +14,13 @@ int main(int argc, char *argv[]) {
         po::options_description desc("options");
         po::positional_options_description pdesc;
 
-        desc.add_options()
-		("help,h", "produce a help message")
-		("input-file,i", po::value<std::filesystem::path>(),
-		 "specify the model to convert")
-		("output-file,o", po::value<std::string>(),
-		 "specify the file to put the output in")
-		("name,n", po::value<std::string>(),
-		 "specify the name to give to the converted scene file");
+        desc.add_options()("help,h", "produce a help message")(
+            "input-file,i", po::value<std::filesystem::path>(),
+            "specify the model to convert")(
+            "output-file,o", po::value<std::string>(),
+            "specify the file to put the output in")(
+            "name,n", po::value<std::string>(),
+            "specify the name to give to the converted scene file");
 
         pdesc.add("input-file", -1);
 
@@ -50,8 +49,9 @@ int main(int argc, char *argv[]) {
         }
         try {
                 if (vm.count("output-file")) {
-                        std::fstream out_file = std::fstream(
-                            vm["output-file"].as<std::string>(), std::ios::out);
+                        std::fstream out_file
+                            = std::fstream(vm["output-file"].as<std::string>(),
+                                           std::ios::out);
                         converter conv(in_file.string(), out_file, name);
                         conv.convert();
                 } else {
