@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
         try {
                 if (vm.count("output-file")) {
                         std::fstream out_file = std::fstream(
-                            vm["output-file"].as<std::string>(), std::ios::in);
+                            vm["output-file"].as<std::string>(), std::ios::out);
                         converter conv(in_file.string(), out_file, name);
                         conv.convert();
                 } else {
