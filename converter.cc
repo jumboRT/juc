@@ -79,10 +79,9 @@ void converter::convert() {
 }
 
 void converter::write_global_textures() {
-        for (const aiTexture *texture :
-             std::span(_scene->mTextures, _scene->mNumTextures)) {
-                convert_texture(texture);
-        }
+        std::for_each_n(
+            _scene->mTextures, _scene->mNumTextures,
+            [this](const aiTexture *texture) { convert_texture(texture); });
 }
 
 void converter::write_materials() {
@@ -93,12 +92,8 @@ void converter::write_materials() {
 
 void converter::write_meshes() {
         std::for_each_n(
-                        _scene->mMaterials, _scene->mNumMaterials,
-                        [this](const ai
-        for (const aiMesh *mesh :
-             std::span(_scene->mMeshes, _scene->mNumMeshes)) {
-                write_mesh(mesh);
-        }
+            _scene->mMaterials, _scene->mNumMaterials,
+            [this](const aiMaterial *material) { write_material(material); });
 }
 
 void converter::convert_texture(const aiTexture *texture) {
