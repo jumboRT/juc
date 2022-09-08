@@ -4,6 +4,7 @@
 #include <Magick++.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+#include <assimp/matrix4x4.h>
 #include <boost/container_hash/hash.hpp>
 #include <filesystem>
 #include <initializer_list>
@@ -108,14 +109,14 @@ class converter {
       private:
         void write_global_textures();
         void write_materials();
-        void write_meshes();
         
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);
         void write_diffuse_directive(aiColor3D diffuse_color);
         void write_diffuse_directive(aiColor3D diffuse_color,
                                      const std::string &tex_path);
-        void write_mesh(const aiMesh *mesh);
+	void write_node(const aiNode *node);
+        void write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation);
         void write_vertex(const vertex &vert);
         void write_face(const aiFace &face);
         void convert_texture(const aiTexture *texture);

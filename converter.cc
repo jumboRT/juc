@@ -77,7 +77,14 @@ converter::converter(const std::string &file, std::ostream &out, const std::stri
 void converter::convert() {
         write_global_textures();
         write_materials();
-        write_meshes();
+	write_node(_scene->mRootNode);
+}
+
+void converter::write_node(const aiNode *node) {
+	std::for_each_n(node->mMeshes, node->mNumMeshes,
+			[this, node](unsigned int idx) { write_mesh(_scene->mMeshes[idx], node->mTransformation); });
+	std::for_each_n(node->mChildren, node->mNumChildren,
+			[this](const aiNode *child) { write_node(child); });
 }
 
 void converter::write_global_textures() {
@@ -87,12 +94,6 @@ void converter::write_global_textures() {
 }
 
 void converter::write_materials() {
-        std::for_each_n(
-            _scene->mMaterials, _scene->mNumMaterials,
-            [this](const aiMaterial *material) { write_material(material); });
-}
-
-void converter::write_meshes() {
         std::for_each_n(
             _scene->mMaterials, _scene->mNumMaterials,
             [this](const aiMaterial *material) { write_material(material); });
@@ -165,7 +166,7 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color,
         }
 }
 
-void converter::write_mesh(const aiMesh *mesh) {
+void converter::write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation) {
         const std::span vertices(mesh->mVertices, mesh->mNumVertices);
         const std::span normals(mesh->mNormals, mesh->mNormals == nullptr
                                                     ? 0
@@ -175,15 +176,19 @@ void converter::write_mesh(const aiMesh *mesh) {
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
 
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
+		aiVector3D point = vertices[idx];
+		point *= transformation;
                 vertex vert;
                 vert.point
-                    = { vertices[idx].x, vertices[idx].y, vertices[idx].z };
+                    = { point.x, point.y, point.z };
                 if (uvs.size() > 0) {
                         vert.uv = { uvs[idx].x, uvs[idx].y };
                 }
                 if (normals.size() > 0) {
-                        vert.normal = { normals[idx].x, normals[idx].y,
-                                        normals[idx].z };
+			aiVector3D normal = normals[idx];
+			normal *= transformation;
+                        vert.normal = { normal.x, normal.y,
+                                        normal.z };
                 }
                 if (_vertices.contains(vert)) {
                         continue;
