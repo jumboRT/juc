@@ -16,7 +16,11 @@
 
 const static std::string SEPARATOR = " ";
 const static std::string COMMENT_DIRECTIVE = "#";
+const static std::string COMMENT = COMMENT_DIRECTIVE + SEPARATOR;
 const static std::string CAMERA_DIRECTIVE = "C";
+const static std::string AMBIENT_LIGHT_DIRECTIVE = "A";
+const static std::string AMBIENT_LIGHT_DEFAULT_BRIGHTNESS = "";
+const static std::string POINT_LIGHT_DIRECTIVE = "l";
 const static std::string TEX_DIRECTIVE = "tex";
 const static std::string MAT_USE_DIRECTIVE = "mat_use";
 const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
@@ -125,10 +129,23 @@ class converter {
       private:
         void write_global_textures();
 	void write_cameras();
+	void write_lights();
         void write_materials();
         void write_header();
 
+	/*
+	template<typename T, typename R>
+	void write_all(T *array, std::size_t count, R (converter::* proc)(T)) {
+		std::for_each_n(array, count, [this, proc](T t) {
+				(*this.*proc)(t);
+				});
+	}
+	*/
+
 	void write_camera(const aiCamera *camera);
+	void write_light(const aiLight *light);
+	void write_light_ambient(const aiLight *light);
+	void write_light_point(const aiLight *light);
 
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);

@@ -86,6 +86,7 @@ converter::converter(const std::string &file, std::ostream &out,
 void converter::convert() {
         write_header();
 	write_cameras();
+	write_lights();
         write_global_textures();
         write_materials();
         write_node(_scene->mRootNode);
@@ -113,10 +114,51 @@ void converter::write_cameras() {
 			});
 }
 
+void converter::write_lights() {
+	//write_all(_scene->mLights, _scene->mNumLights, &converter::write_light);
+	std::for_each_n(_scene->mLights, _scene->mNumLights,
+			[this](const aiLight *light) { write_light(light); });
+}
+
 void converter::write_camera(const aiCamera *camera) {
 	_out << CAMERA_DIRECTIVE << SEPARATOR << camera->mPosition
 		<< SEPARATOR << camera->mLookAt << SEPARATOR
 		<< (camera->mHorizontalFOV * (180/std::acos(0.0))) << std::endl;
+}
+
+void converter::write_light(const aiLight *light) {
+	static bool warned = false;
+	
+	if (!warned && (light->mType == aiLightSource_DIRECTIONAL ||
+				light->mType == aiLightSource_POINT ||
+				light->mType == aiLightSource_SPOT ||
+				light->mType == aiLightSource_AREA)) {
+		std::cerr << "warning: scene contains light a directional/point/spot/area or "
+			<< "other type of light that has no volume. jumboRT currently has no "
+			<< "support for lights without a surface area. juc will try it's best to "
+			<< "convert these lights to jumboRT variants" << std::endl;
+		warned = true;
+	}
+	if (light->mType == aiLightSource_AMBIENT) {
+		write_light_ambient(light);
+	} else if (light->mType == aiLightSource_POINT) {
+		write_light_point(light);
+	}
+}
+
+void converter::write_light_ambient(const aiLight *light) {
+	static bool first = true;
+	
+	if (!first) {
+		_out << COMMENT;
+	}
+	_out << AMBIENT_LIGHT_DIRECTIVE << SEPARATOR << AMBIENT_LIGHT_DEFAULT_BRIGHTNESS
+		<< SEPARATOR << light->mColorDiffuse << std::endl;
+}
+
+void converter::write_light_point(const aiLight *light) {
+	_out << POINT_LIGHT_DIRECTIVE << SEPARATOR << (light->mSize.x * light->mSize.y)
+		<< SEPARATOR << light->mColorDiffuse << std::endl;
 }
 
 void converter::write_node(const aiNode *node) {
