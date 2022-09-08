@@ -14,6 +14,9 @@ int main(int argc, char *argv[]) {
         po::options_description desc("options");
         po::positional_options_description pdesc;
 
+
+	// add option to add custom header
+	// add option to flip triangulation
         desc.add_options()("help,h", "produce a help message")(
             "input-file,i", po::value<std::filesystem::path>(),
             "specify the model to convert")(
