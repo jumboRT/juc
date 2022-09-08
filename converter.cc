@@ -67,9 +67,10 @@ texture_converter::~texture_converter() {}
 
 void texture_converter::convert() { _image.write(to_path.string()); }
 
-converter::converter(const std::string &file, std::ostream &out)
+converter::converter(const std::string &file, std::ostream &out, const std::string &name) 
     : _file(file), _out(out), _importer(),
-      _scene(_importer.ReadFile(_file.c_str(), aiProcess_Triangulate)) {}
+      _scene(_importer.ReadFile(_file.c_str(), aiProcess_Triangulate)),
+      scene_name(name) { }
 
 void converter::convert() {
         write_global_textures();

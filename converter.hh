@@ -99,7 +99,7 @@ class converter {
         const std::string scene_name;
 
         converter() = delete;
-        converter(const std::string &file, std::ostream &out);
+	converter(const std::string &file, std::ostream &out, const std::string &name);
 
         void convert();
 

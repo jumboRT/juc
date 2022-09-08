@@ -1,23 +1,66 @@
-#include <cstdlib>
-#include <iostream>
 #include "converter.hh"
+#include <boost/program_options.hpp>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 
 void print_usage(const std::string &name) {
-	std::cerr << name << " <model>" << std::endl;
+        std::cerr << name << " <model>" << std::endl;
 }
 
 int main(int argc, char *argv[]) {
-	if (argc < 2) {
-		print_usage(argv[0]);
-		return EXIT_SUCCESS;
-	}
-	const std::string file(argv[1]);
-	try {
-                converter conv(file, std::cout);
-		conv.convert();
-	} catch (const std::exception &ex) {
-		std::cout << argv[0] << ": " << ex.what() << std::endl;
-		return EXIT_FAILURE;
-	}
-	return EXIT_SUCCESS;
+        namespace po = boost::program_options;
+        po::options_description desc("options");
+        po::positional_options_description pdesc;
+
+        desc.add_options()
+		("help,h", "produce a help message")
+		("input-file,i", po::value<std::filesystem::path>(),
+		 "specify the model to convert")
+		("output-file,o", po::value<std::string>(),
+		 "specify the file to put the output in")
+		("name,n", po::value<std::string>(),
+		 "specify the name to give to the converted scene file");
+
+        pdesc.add("input-file", -1);
+
+        po::variables_map vm;
+        po::store(po::command_line_parser(argc, argv)
+                      .options(desc)
+                      .positional(pdesc)
+                      .run(),
+                  vm);
+
+        po::notify(vm);
+        if (vm.count("help")) {
+                std::cout << desc << std::endl;
+                return EXIT_SUCCESS;
+        }
+        if (vm.count("input-file") == 0) {
+                std::cerr << argv[0] << ": no input file specified"
+                          << std::endl;
+                return EXIT_FAILURE;
+        }
+        std::filesystem::path in_file
+            = vm["input-file"].as<std::filesystem::path>();
+        std::string name = in_file.stem();
+        if (vm.count("name")) {
+                name = vm["name"].as<std::string>();
+        }
+        try {
+                if (vm.count("output-file")) {
+                        std::fstream out_file = std::fstream(
+                            vm["output-file"].as<std::string>(), std::ios::in);
+                        converter conv(in_file.string(), out_file, name);
+                        conv.convert();
+                } else {
+                        converter conv(in_file.string(), std::cout, name);
+                        conv.convert();
+                }
+        } catch (const std::exception &ex) {
+                std::cout << argv[0] << ": " << ex.what() << std::endl;
+                return EXIT_FAILURE;
+        }
+        return EXIT_SUCCESS;
 }
