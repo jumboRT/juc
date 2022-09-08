@@ -21,6 +21,9 @@ const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
 const static std::string MAT_PREFIX = "mat_";
 const static std::string MAT_INDENT = "    ";
 const static std::string MAT_DIFFUSE_DIRECTIVE = "diffuse";
+const static std::string MAT_EMISSIVE_DIRECTIVE = "emissive";
+const static std::string MAT_DEFAULT_BRIGHTNESS = "1.0";
+const static std::string BXDF_DEFAULT_WEIGHT = "1.0";
 const static std::string MAT_FILTER = "filter";
 const static std::string MAT_END_DIRECTIVE = "mat_end";
 const static std::string TEX_PREFIX = "tex_";
@@ -118,6 +121,11 @@ class converter {
         void write_diffuse_directive(aiColor3D diffuse_color);
         void write_diffuse_directive(aiColor3D diffuse_color,
                                      const std::string &tex_path);
+        void write_material_emissive(const aiMaterial *material);
+        void write_emissive_directive(aiColor3D emissive_color);
+        void write_emissive_directive(aiColor3D emissive_color,
+                                     const std::string &tex_path);
+
         void write_node(const aiNode *node);
         void write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation);
         void write_vertex(const vertex &vert);

@@ -134,8 +134,27 @@ void converter::write_material(const aiMaterial *material) {
         _out << MAT_BEGIN_DIRECTIVE << SEPARATOR << MAT_PREFIX
              << name << std::endl;
         write_material_diffuse(material);
+        write_material_emissive(material);
         _out << MAT_END_DIRECTIVE << std::endl;
 	_materials.push_back(name);
+}
+
+void converter::write_material_emissive(const aiMaterial *material) {
+	aiColor3D emissive_color;
+
+	material->Get(AI_MATKEY_COLOR_EMISSIVE, emissive_color);
+	const std::size_t count
+		= material->GetTextureCount(aiTextureType_EMISSIVE);
+	if (count == 0) {
+		write_emissive_directive(emissive_color);
+	} else {
+		for (std::size_t idx = 0; idx < count; ++idx) {
+			aiString path;
+			material->GetTexture(aiTextureType_EMISSIVE, idx, &path,
+					nullptr, nullptr, nullptr, nullptr);
+			write_emissive_directive(emissive_color, path.C_Str());
+		}
+	}
 }
 
 void converter::write_material_diffuse(const aiMaterial *material) {
@@ -157,8 +176,13 @@ void converter::write_material_diffuse(const aiMaterial *material) {
 }
 
 void converter::write_diffuse_directive(aiColor3D diffuse_color) {
-        _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << 1
+        _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << BXDF_DEFAULT_WEIGHT
              << SEPARATOR << diffuse_color << std::endl;
+}
+
+void converter::write_emissive_directive(aiColor3D emissive_color) {
+        _out << MAT_INDENT << MAT_EMISSIVE_DIRECTIVE << SEPARATOR << MAT_DEFAULT_BRIGHTNESS
+		<< SEPARATOR << emissive_color << std::endl;
 }
 
 void converter::write_diffuse_directive(aiColor3D diffuse_color,
@@ -166,13 +190,24 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color,
         if (tex_path.empty()) {
                 write_diffuse_directive(diffuse_color);
         } else {
-                _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << 1
+                _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << BXDF_DEFAULT_WEIGHT
                      << SEPARATOR << MAT_FILTER << SEPARATOR << TEX_PREFIX
                      << _textures[tex_path] << SEPARATOR << diffuse_color
                      << std::endl;
         }
 }
 
+void converter::write_emissive_directive(aiColor3D emissive_color,
+                                        const std::string &tex_path) {
+        if (tex_path.empty()) {
+                write_emissive_directive(emissive_color);
+        } else {
+                _out << MAT_INDENT << MAT_DIFFUSE_DIRECTIVE << SEPARATOR << MAT_DEFAULT_BRIGHTNESS
+                     << SEPARATOR << MAT_FILTER << SEPARATOR << TEX_PREFIX
+                     << _textures[tex_path] << SEPARATOR << emissive_color 
+                     << std::endl;
+        }
+}
 void converter::write_mesh(const aiMesh *mesh,
                            const aiMatrix4x4 &transformation) {
         const std::span vertices(mesh->mVertices, mesh->mNumVertices);
