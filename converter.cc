@@ -6,6 +6,8 @@
 #include <iostream>
 #include <span>
 #include <stdexcept>
+#include <algorithm>
+#include <functional>
 
 vertex::vertex(math::vector<float, 3> point) : point(point) {}
 
@@ -76,26 +78,24 @@ void converter::convert() {
 }
 
 void converter::write_global_textures() {
-        const std::span textures(_scene->mTextures, _scene->mNumTextures);
-
-        // TODO make texture const
-        for (aiTexture *texture : textures) {
+        for (const aiTexture *texture :
+             std::span(_scene->mTextures, _scene->mNumTextures)) {
                 convert_texture(texture);
         }
 }
 
 void converter::write_materials() {
-        const std::span materials(_scene->mMaterials, _scene->mNumMaterials);
-
-        for (const aiMaterial *material : materials) {
-                write_material(material);
-        }
+        std::for_each_n(
+            _scene->mMaterials, _scene->mNumMaterials,
+            [this](const aiMaterial *material) { write_material(material); });
 }
 
 void converter::write_meshes() {
-        const std::span meshes(_scene->mMeshes, _scene->mNumMeshes);
-
-        for (const aiMesh *mesh : meshes) {
+        std::for_each_n(
+                        _scene->mMaterials, _scene->mNumMaterials,
+                        [this](const ai
+        for (const aiMesh *mesh :
+             std::span(_scene->mMeshes, _scene->mNumMeshes)) {
                 write_mesh(mesh);
         }
 }

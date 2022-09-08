@@ -11,6 +11,7 @@
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <span>
 
 const static std::string SEPARATOR = " ";
 const static std::string TEX_DIRECTIVE = "tex";
@@ -108,7 +109,7 @@ class converter {
         void write_global_textures();
         void write_materials();
         void write_meshes();
-
+        
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);
         void write_diffuse_directive(aiColor3D diffuse_color);
