@@ -55,7 +55,9 @@ texture_converter::texture_converter(const std::filesystem::path &from,
         if (std::filesystem::status(from).type()
             == std::filesystem::file_type::directory)
                 throw std::runtime_error(from.string() + ": is a directory");
+
         _image.read(from_path.string());
+
         std::filesystem::path tmp(to);
         std::filesystem::create_directories(tmp.remove_filename());
 }
@@ -186,7 +188,7 @@ void converter::write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation
                 }
                 if (normals.size() > 0) {
 			aiVector3D normal = normals[idx];
-			normal *= transformation;
+			normal *= transformation; //TODO check if this transformation is needed
                         vert.normal = { normal.x, normal.y,
                                         normal.z };
                 }
@@ -196,11 +198,8 @@ void converter::write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation
                 _vertices[vert] = _vertices.size();
                 write_vertex(vert);
         }
-        const std::span faces(mesh->mFaces, mesh->mNumFaces);
-        // TODO use for_each_n
-        for (const aiFace &face : faces) {
-                write_face(face);
-        }
+	std::for_each_n(mesh->mFaces, mesh->mNumFaces, 
+			[this](const aiFace &face) { write_face(face); });
 }
 
 void converter::write_vertex(const vertex &vertex) {
