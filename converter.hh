@@ -16,6 +16,7 @@
 
 const static std::string SEPARATOR = " ";
 const static std::string COMMENT_DIRECTIVE = "#";
+const static std::string CAMERA_DIRECTIVE = "C";
 const static std::string TEX_DIRECTIVE = "tex";
 const static std::string MAT_USE_DIRECTIVE = "mat_use";
 const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
@@ -37,6 +38,8 @@ const static std::string VTN_DIRECTIVE = "x";
 const static std::string VT_DIRECTIVE = "w";
 const static std::string VN_DIRECTIVE = "y";
 const static std::string V_DIRECTIVE = "v";
+
+const static std::string DEFAULT_CAMERA = CAMERA_DIRECTIVE + SEPARATOR + "0,0,0 1,0,0 90";
 
 namespace math {
 template <typename T, std::size_t N> using vector = std::array<T, N>;
@@ -118,8 +121,11 @@ class converter {
 
       private:
         void write_global_textures();
+	void write_cameras();
         void write_materials();
         void write_header();
+
+	void write_camera(const aiCamera *camera);
 
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);
@@ -148,6 +154,7 @@ class converter {
 };
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color);
+std::ostream &operator<<(std::ostream &stream, const aiVector3D& vec);
 
 template <typename T, std::size_t N>
 std::ostream &operator<<(std::ostream &stream,
