@@ -122,6 +122,7 @@ class converter {
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
         void convert_compressed_texture(const aiTexture *texture);
+        std::filesystem::path texture_path(const std::string &name);
         static std::string texture_name(const std::string &path);
 };
 

@@ -1,13 +1,13 @@
 #include "converter.hh"
+#include <algorithm>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 #include <assimp/texture.h>
 #include <fstream>
+#include <functional>
 #include <iostream>
 #include <span>
 #include <stdexcept>
-#include <algorithm>
-#include <functional>
 
 vertex::vertex(math::vector<float, 3> point) : point(point) {}
 
@@ -56,6 +56,8 @@ texture_converter::texture_converter(const std::filesystem::path &from,
             == std::filesystem::file_type::directory)
                 throw std::runtime_error(from.string() + ": is a directory");
         _image.read(from_path.string());
+        std::filesystem::path tmp(to);
+        std::filesystem::create_directories(tmp.remove_filename());
 }
 
 texture_converter::texture_converter(const std::string &from,
@@ -227,11 +229,14 @@ std::string converter::texture_name(const std::string &path) {
         return std::filesystem::path(path).stem().string();
 }
 
+std::filesystem::path converter::texture_path(const std::string &name) {
+        return std::filesystem::path(scene_name) / (name + TEX_EXT);
+}
+
 void converter::convert_compressed_texture(const std::string &tex_path) {
         const std::string name = texture_name(tex_path);
+        const std::filesystem::path out_path = texture_path(name);
 
-        std::filesystem::path out_path
-            = std::filesystem::current_path() / scene_name / (name + TEX_EXT);
         _out << TEX_DIRECTIVE << SEPARATOR << TEX_PREFIX << name << SEPARATOR
              << out_path.string() << std::endl;
         texture_converter(tex_path, out_path.string()).convert();
