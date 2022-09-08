@@ -21,7 +21,9 @@ const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
 const static std::string MAT_PREFIX = "mat_";
 const static std::string MAT_INDENT = "    ";
 const static std::string MAT_DIFFUSE_DIRECTIVE = "diffuse";
-const static std::string MAT_EMISSIVE_DIRECTIVE = "emissive";
+const static std::string MAT_EMISSIVE_DIRECTIVE = "emission";
+const static std::string MAT_SPECULAR_DIRECTIVE = "reflective";//TODO make this the proper specular directive
+const static std::string MAT_SPECULAR_DEFAULT_FUZZY = "0.5";
 const static std::string MAT_DEFAULT_BRIGHTNESS = "1.0";
 const static std::string BXDF_DEFAULT_WEIGHT = "1.0";
 const static std::string MAT_FILTER = "filter";
@@ -124,6 +126,10 @@ class converter {
         void write_material_emissive(const aiMaterial *material);
         void write_emissive_directive(aiColor3D emissive_color);
         void write_emissive_directive(aiColor3D emissive_color,
+                                     const std::string &tex_path);
+        void write_material_specular(const aiMaterial *material);
+        void write_specular_directive(aiColor3D specular_color);
+        void write_specular_directive(aiColor3D specular_color,
                                      const std::string &tex_path);
 
         void write_node(const aiNode *node);
