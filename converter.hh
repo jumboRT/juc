@@ -30,6 +30,7 @@ const static std::string MAT_SPECULAR_DEFAULT_FUZZY = "0.5";
 const static std::string MAT_DEFAULT_BRIGHTNESS = "1.0";
 const static std::string BXDF_DEFAULT_WEIGHT = "1.0";
 const static std::string MAT_FILTER = "filter";
+const static std::string MAT_SMOOTH_DIRECTIVE = "smooth";
 const static std::string MAT_END_DIRECTIVE = "mat_end";
 const static std::string TEX_PREFIX = "tex_";
 const static std::string TEX_EXT = ".bmp";
