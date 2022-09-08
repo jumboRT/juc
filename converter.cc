@@ -296,7 +296,7 @@ void converter::write_mesh(const aiMesh *mesh,
         const std::span uvs(
             mesh->mTextureCoords[0],
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
-        _out << MAT_USE_DIRECTIVE << SEPARATOR
+        _out << MAT_USE_DIRECTIVE << SEPARATOR << MAT_PREFIX
              << _materials[mesh->mMaterialIndex] << std::endl;
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
                 aiVector3D point = vertices[idx];
@@ -360,10 +360,12 @@ std::filesystem::path converter::texture_path(const std::string &name) {
 void converter::convert_compressed_texture(const std::string &tex_path) {
         const std::string name = texture_name(tex_path);
         const std::filesystem::path out_path = texture_path(name);
+	std::filesystem::path rel_path = std::filesystem::path(_file).remove_filename()
+		/ std::filesystem::path(tex_path);
 
         _out << TEX_DIRECTIVE << SEPARATOR << TEX_PREFIX << name << SEPARATOR
              << out_path.string() << std::endl;
-        texture_converter(tex_path, out_path.string()).convert();
+        texture_converter(rel_path.string(), out_path.string()).convert();
         _textures[tex_path] = name;
 }
 
