@@ -312,6 +312,7 @@ void converter::write_mesh(const aiMesh *mesh,
                                                   // transformation is needed
                         vert.normal = { normal.x, normal.y, normal.z };
                 }
+		_indices.push_back(vert);
                 if (_vertices.contains(vert)) {
                         continue;
                 }
@@ -339,8 +340,9 @@ void converter::write_vertex(const vertex &vertex) {
 }
 
 void converter::write_face(const aiFace &face) {
-        _out << FACE_DIRECTIVE << SEPARATOR << face.mIndices[0] << SEPARATOR
-             << face.mIndices[1] << SEPARATOR << face.mIndices[2] << std::endl;
+        _out << FACE_DIRECTIVE << SEPARATOR << _vertices[_indices.at(face.mIndices[0])]
+		<< SEPARATOR << _vertices[_indices.at(face.mIndices[1])]
+		<< SEPARATOR << _vertices[_indices.at(face.mIndices[2])] << std::endl;
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {

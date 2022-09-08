@@ -107,6 +107,7 @@ class converter {
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
         std::unordered_map<vertex, std::size_t> _vertices;
+	std::vector<vertex> _indices;
         std::vector<std::string> _materials;
 
       public:
