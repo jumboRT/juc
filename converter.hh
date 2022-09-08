@@ -15,6 +15,7 @@
 #include <unordered_map>
 
 const static std::string SEPARATOR = " ";
+const static std::string COMMENT_DIRECTIVE = "#";
 const static std::string TEX_DIRECTIVE = "tex";
 const static std::string MAT_USE_DIRECTIVE = "mat_use";
 const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
@@ -117,6 +118,7 @@ class converter {
       private:
         void write_global_textures();
         void write_materials();
+	void write_header();
 
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);
