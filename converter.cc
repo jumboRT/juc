@@ -75,10 +75,13 @@ texture_converter::~texture_converter() {}
 void texture_converter::convert() { _image.write(to_path.string()); }
 
 converter::converter(const std::string &file, std::ostream &out,
-                     const std::string &name)
-    : _file(file), _out(out), _importer(),
-      _scene(_importer.ReadFile(_file.c_str(), aiProcess_Triangulate)),
-      scene_name(name) {}
+                     const std::string &name, bool gen_smooth_norm)
+    : _file(file), _out(out), _importer(), smooth(gen_smooth_norm),
+      _scene(_importer.ReadFile(_file.c_str(), aiProcess_Triangulate | (aiProcess_GenSmoothNormals * smooth)
+			      | aiProcess_FlipWindingOrder)),
+      scene_name(name) {
+	      _out << std::setiosflags(std::ios_base::fixed);
+}
 
 void converter::convert() {
         write_header();
@@ -168,6 +171,9 @@ void converter::write_material(const aiMaterial *material) {
              << std::endl;
         write_material_diffuse(material);
         write_material_emissive(material);
+	if (smooth) {
+		_out << MAT_INDENT << MAT_SMOOTH_DIRECTIVE << std::endl;
+	}
         _out << MAT_END_DIRECTIVE << std::endl;
         _materials.push_back(name);
 }

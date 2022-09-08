@@ -103,6 +103,7 @@ class converter {
         std::string _file;
         std::ostream &_out;
         Assimp::Importer _importer;
+	bool smooth;
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
         std::unordered_map<vertex, std::size_t> _vertices;
@@ -113,7 +114,7 @@ class converter {
 
         converter() = delete;
         converter(const std::string &file, std::ostream &out,
-                  const std::string &name);
+                  const std::string &name, bool gen_smooth_norm);
 
         void convert();
 

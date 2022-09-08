@@ -23,7 +23,8 @@ int main(int argc, char *argv[]) {
             "output-file,o", po::value<std::string>(),
             "specify the file to put the output in")(
             "name,n", po::value<std::string>(),
-            "specify the name to give to the converted scene file");
+            "specify the name to give to the converted scene file")
+		    ("smooth,-s", "generate smooth normals");
 
         pdesc.add("input-file", -1);
 
@@ -55,10 +56,10 @@ int main(int argc, char *argv[]) {
                         std::fstream out_file
                             = std::fstream(vm["output-file"].as<std::string>(),
                                            std::ios::out);
-                        converter conv(in_file.string(), out_file, name);
+                        converter conv(in_file.string(), out_file, name, vm.count("smooth") != 0);
                         conv.convert();
                 } else {
-                        converter conv(in_file.string(), std::cout, name);
+                        converter conv(in_file.string(), std::cout, name, vm.count("smooth") != 0);
                         conv.convert();
                 }
         } catch (const std::exception &ex) {
