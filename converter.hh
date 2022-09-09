@@ -159,8 +159,8 @@ class converter {
         void write_emissive_directive(aiColor3D emissive_color,
                                       const std::string &tex_path);
         void write_material_opacity(const aiMaterial *material);
-        void write_opacity_directive(aiColor3D opacity_color);
-        void write_opacity_directive(aiColor3D opacity_color,
+        void write_opacity_directive(aiColor4D opacity_color);
+        void write_opacity_directive(aiColor4D opacity_color,
                                       const std::string &tex_path);
         void write_material_specular(const aiMaterial *material);
         void write_specular_directive(aiColor3D specular_color);
@@ -181,6 +181,7 @@ class converter {
 };
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color);
+std::ostream &operator<<(std::ostream &stream, const aiColor4D &color);
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec);
 
 template <typename T, std::size_t N>

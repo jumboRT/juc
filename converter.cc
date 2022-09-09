@@ -259,9 +259,10 @@ void converter::write_material_emissive(const aiMaterial *material) {
 }
 
 void converter::write_material_opacity(const aiMaterial *material) {
-	aiColor3D opacity_color;
+	aiColor4D opacity_color;
 
 	material->Get(AI_MATKEY_OPACITY, opacity_color);
+	opacity_color.a = 1.0 - opacity_color.a;
 	const std::size_t count
 		= material->GetTextureCount(aiTextureType_OPACITY);
 	if (count == 0) {
@@ -325,7 +326,7 @@ void converter::write_emissive_directive(aiColor3D emissive_color) {
              << std::endl;
 }
 
-void converter::write_opacity_directive(aiColor3D opacity_color) {
+void converter::write_opacity_directive(aiColor4D opacity_color) {
 	_out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
 		<< opacity_color << std::endl;
 }
@@ -360,7 +361,7 @@ void converter::write_emissive_directive(aiColor3D emissive_color,
         }
 }
 
-void converter::write_opacity_directive(aiColor3D opacity_color,
+void converter::write_opacity_directive(aiColor4D opacity_color,
                                          const std::string &tex_path) {
         if (tex_path.empty()) {
                 write_opacity_directive(opacity_color);
@@ -481,6 +482,11 @@ void converter::convert_compressed_texture(const aiTexture *texture) {
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
         return stream << "(" << color.r << "," << color.g << "," << color.b
+                      << ")";
+}
+
+std::ostream &operator<<(std::ostream &stream, const aiColor4D &color) {
+        return stream << "(" << color.r << "," << color.g << "," << color.b << "," << color.a
                       << ")";
 }
 
