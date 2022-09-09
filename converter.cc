@@ -72,10 +72,10 @@ texture_converter::texture_converter(const std::string &from,
 texture_converter::~texture_converter() {}
 
 void texture_converter::convert() {
-	_image.depth(32);
-	_image.colorSpace(Magick::sRGBColorspace);
-	_image.alpha(true);
-	_image.write(to_path.string());
+        _image.depth(32);
+        _image.colorSpace(Magick::sRGBColorspace);
+        _image.alpha(true);
+        _image.write(to_path.string());
 }
 
 converter::converter(const std::string &file, std::ostream &out,
@@ -86,8 +86,8 @@ converter::converter(const std::string &file, std::ostream &out,
                                     | (aiProcess_GenSmoothNormals * smooth)
                                     | aiProcess_FlipWindingOrder)),
       scene_name(name) {
-	if (_scene == nullptr)
-		throw std::runtime_error("could not load file");
+        if (_scene == nullptr)
+                throw std::runtime_error("could not load file");
         _out << std::setiosflags(std::ios_base::fixed);
 }
 
@@ -98,8 +98,8 @@ void converter::convert() {
         write_global_textures();
         write_materials();
         write_node(_scene->mRootNode);
-	std::cerr << "vertices: " << _vertices.size() << std::endl;
-	std::cerr << "triangles: " << _triangles << std::endl;
+        std::cerr << "vertices: " << _vertices.size() << std::endl;
+        std::cerr << "triangles: " << _triangles << std::endl;
 }
 
 void converter::write_header() {
@@ -358,7 +358,7 @@ void converter::write_mesh(const aiMesh *mesh,
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
         _out << MAT_USE_DIRECTIVE << SEPARATOR << MAT_PREFIX
              << _materials[mesh->mMaterialIndex] << std::endl;
-	std::vector<vertex> indices;
+        std::vector<vertex> indices;
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
                 aiVector3D point = vertices[idx];
                 point *= transformation;
@@ -381,7 +381,9 @@ void converter::write_mesh(const aiMesh *mesh,
                 write_vertex(vert);
         }
         std::for_each_n(mesh->mFaces, mesh->mNumFaces,
-                        [this, &indices](const aiFace &face) { write_face(face, indices); });
+                        [this, &indices](const aiFace &face) {
+                                write_face(face, indices);
+                        });
 }
 
 void converter::write_vertex(const vertex &vertex) {
@@ -401,8 +403,8 @@ void converter::write_vertex(const vertex &vertex) {
 }
 
 void converter::write_face(const aiFace &face,
-		const std::vector<vertex> &indices) {
-	_triangles += 1;
+                           const std::vector<vertex> &indices) {
+        _triangles += 1;
         _out << FACE_DIRECTIVE << SEPARATOR
              << _vertices[indices.at(face.mIndices[0])] << SEPARATOR
              << _vertices[indices.at(face.mIndices[1])] << SEPARATOR

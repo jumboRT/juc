@@ -44,7 +44,8 @@ const static std::string VT_DIRECTIVE = "w";
 const static std::string VN_DIRECTIVE = "y";
 const static std::string V_DIRECTIVE = "v";
 
-const static std::string DEFAULT_CAMERA = CAMERA_DIRECTIVE + SEPARATOR + "0,0,0 1,0,0 90";
+const static std::string DEFAULT_CAMERA
+    = CAMERA_DIRECTIVE + SEPARATOR + "0,0,0 1,0,0 90";
 
 namespace math {
 template <typename T, std::size_t N> using vector = std::array<T, N>;
@@ -108,12 +109,12 @@ class converter {
         std::string _file;
         std::ostream &_out;
         Assimp::Importer _importer;
-	bool smooth;
+        bool smooth;
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
         std::unordered_map<vertex, std::size_t> _vertices;
         std::vector<std::string> _materials;
-	std::size_t _triangles = 0;
+        std::size_t _triangles = 0;
 
       public:
         const std::string scene_name;
@@ -128,24 +129,24 @@ class converter {
 
       private:
         void write_global_textures();
-	void write_cameras();
-	void write_lights();
+        void write_cameras();
+        void write_lights();
         void write_materials();
         void write_header();
 
-	/*
-	template<typename T, typename R>
-	void write_all(T *array, std::size_t count, R (converter::* proc)(T)) {
-		std::for_each_n(array, count, [this, proc](T t) {
-				(*this.*proc)(t);
-				});
-	}
-	*/
+        /*
+        template<typename T, typename R>
+        void write_all(T *array, std::size_t count, R (converter::* proc)(T)) {
+                std::for_each_n(array, count, [this, proc](T t) {
+                                (*this.*proc)(t);
+                                });
+        }
+        */
 
-	void write_camera(const aiCamera *camera);
-	void write_light(const aiLight *light);
-	void write_light_ambient(const aiLight *light);
-	void write_light_point(const aiLight *light);
+        void write_camera(const aiCamera *camera);
+        void write_light(const aiLight *light);
+        void write_light_ambient(const aiLight *light);
+        void write_light_point(const aiLight *light);
 
         void write_material(const aiMaterial *material);
         void write_material_diffuse(const aiMaterial *material);
@@ -164,7 +165,8 @@ class converter {
         void write_node(const aiNode *node);
         void write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation);
         void write_vertex(const vertex &vert);
-        void write_face(const aiFace &face, const std::vector<vertex> &indices);
+        void write_face(const aiFace &face,
+                        const std::vector<vertex> &indices);
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
@@ -174,7 +176,7 @@ class converter {
 };
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color);
-std::ostream &operator<<(std::ostream &stream, const aiVector3D& vec);
+std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec);
 
 template <typename T, std::size_t N>
 std::ostream &operator<<(std::ostream &stream,

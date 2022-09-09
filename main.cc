@@ -14,31 +14,30 @@ int main(int argc, char *argv[]) {
         po::options_description desc("options");
         po::positional_options_description pdesc;
 
-
-	// add option to add custom header
-	// add option to flip triangulation
+        // add option to add custom header
+        // add option to flip triangulation
         desc.add_options()("help,h", "produce a help message")(
             "input-file,i", po::value<std::filesystem::path>(),
             "specify the model to convert")(
             "output-file,o", po::value<std::string>(),
             "specify the file to put the output in")(
             "name,n", po::value<std::string>(),
-            "specify the name to give to the converted scene file")
-		    ("smooth,-s", "generate smooth normals");
+            "specify the name to give to the converted scene file")(
+            "smooth,-s", "generate smooth normals");
 
         pdesc.add("input-file", -1);
 
         po::variables_map vm;
-	try {
-		po::store(po::command_line_parser(argc, argv)
-			      .options(desc)
-			      .positional(pdesc)
-			      .run(),
-			  vm);
-	} catch (const std::exception &ex) {
-		std::cerr << argv[0] << ": " << ex.what() << std::endl;
-		return EXIT_FAILURE;
-	}
+        try {
+                po::store(po::command_line_parser(argc, argv)
+                              .options(desc)
+                              .positional(pdesc)
+                              .run(),
+                          vm);
+        } catch (const std::exception &ex) {
+                std::cerr << argv[0] << ": " << ex.what() << std::endl;
+                return EXIT_FAILURE;
+        }
 
         po::notify(vm);
         if (vm.count("help")) {
@@ -61,10 +60,12 @@ int main(int argc, char *argv[]) {
                         std::fstream out_file
                             = std::fstream(vm["output-file"].as<std::string>(),
                                            std::ios::out);
-                        converter conv(in_file.string(), out_file, name, vm.count("smooth") != 0);
+                        converter conv(in_file.string(), out_file, name,
+                                       vm.count("smooth") != 0);
                         conv.convert();
                 } else {
-                        converter conv(in_file.string(), std::cout, name, vm.count("smooth") != 0);
+                        converter conv(in_file.string(), std::cout, name,
+                                       vm.count("smooth") != 0);
                         conv.convert();
                 }
         } catch (const std::exception &ex) {
