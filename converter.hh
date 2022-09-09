@@ -57,6 +57,14 @@ std::size_t hash_value(const vector<T, N> &vector) {
 }
 }
 
+class better_float {
+	float _val;
+
+	public:
+		constexpr better_float(float val) noexcept : _val(val) { }
+		constexpr float value() const noexcept { return _val; }
+};
+
 struct vertex {
         math::vector<float, 3> point;
         std::optional<math::vector<float, 2> > uv;
@@ -161,7 +169,7 @@ class converter {
         void write_material_opacity(const aiMaterial *material);
         void write_opacity_directive(aiColor4D opacity_color);
         void write_opacity_directive(aiColor4D opacity_color,
-                                      const std::string &tex_path);
+                                     const std::string &tex_path);
         void write_material_specular(const aiMaterial *material);
         void write_specular_directive(aiColor3D specular_color);
         void write_specular_directive(aiColor3D specular_color,
@@ -180,16 +188,17 @@ class converter {
         static std::string texture_name(const std::string &path);
 };
 
+std::ostream &operator<<(std::ostream &stream, const better_float &fl);
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color);
 std::ostream &operator<<(std::ostream &stream, const aiColor4D &color);
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec);
 
-template <typename T, std::size_t N>
+template <std::size_t N>
 std::ostream &operator<<(std::ostream &stream,
-                         const math::vector<T, N> &vector) {
+                         const math::vector<float, N> &vector) {
         std::string separator;
         for (auto &&x : vector) {
-                stream << separator << x;
+                stream << separator << better_float(x);
                 separator = ",";
         }
         return stream;

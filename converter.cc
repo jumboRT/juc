@@ -11,6 +11,7 @@
 #include <iostream>
 #include <span>
 #include <stdexcept>
+#include <sstream>
 
 vertex::vertex(math::vector<float, 3> point) : point(point) {}
 
@@ -231,7 +232,7 @@ void converter::write_material(const aiMaterial *material) {
              << std::endl;
         write_material_diffuse(material);
         write_material_emissive(material);
-	write_material_opacity(material);
+        write_material_opacity(material);
         if (smooth) {
                 _out << MAT_INDENT << MAT_SMOOTH_DIRECTIVE << std::endl;
         }
@@ -259,23 +260,23 @@ void converter::write_material_emissive(const aiMaterial *material) {
 }
 
 void converter::write_material_opacity(const aiMaterial *material) {
-	aiColor4D opacity_color;
+        aiColor4D opacity_color;
 
-	material->Get(AI_MATKEY_OPACITY, opacity_color);
-	opacity_color.a = 1.0 - opacity_color.a;
-	const std::size_t count
-		= material->GetTextureCount(aiTextureType_OPACITY);
-	if (count == 0) {
-		write_opacity_directive(opacity_color);
-	} else {
-		for (std::size_t idx = 0; idx < count; ++idx) {
-			aiString path;
-			material->GetTexture(aiTextureType_OPACITY, idx,
-					&path, nullptr, nullptr, nullptr,
-					nullptr);
-			write_opacity_directive(opacity_color, path.C_Str());
-		}
-	}
+        material->Get(AI_MATKEY_OPACITY, opacity_color);
+        opacity_color.a = 1.0 - opacity_color.a;
+        const std::size_t count
+            = material->GetTextureCount(aiTextureType_OPACITY);
+        if (count == 0) {
+                write_opacity_directive(opacity_color);
+        } else {
+                for (std::size_t idx = 0; idx < count; ++idx) {
+                        aiString path;
+                        material->GetTexture(aiTextureType_OPACITY, idx, &path,
+                                             nullptr, nullptr, nullptr,
+                                             nullptr);
+                        write_opacity_directive(opacity_color, path.C_Str());
+                }
+        }
 }
 
 void converter::write_material_specular(const aiMaterial *material) {
@@ -327,8 +328,8 @@ void converter::write_emissive_directive(aiColor3D emissive_color) {
 }
 
 void converter::write_opacity_directive(aiColor4D opacity_color) {
-	_out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
-		<< opacity_color << std::endl;
+        _out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
+             << opacity_color << std::endl;
 }
 
 void converter::write_specular_directive(aiColor3D specular_color) {
@@ -362,14 +363,14 @@ void converter::write_emissive_directive(aiColor3D emissive_color,
 }
 
 void converter::write_opacity_directive(aiColor4D opacity_color,
-                                         const std::string &tex_path) {
+                                        const std::string &tex_path) {
         if (tex_path.empty()) {
                 write_opacity_directive(opacity_color);
         } else {
                 _out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
                      << MAT_FILTER << SEPARATOR << TEX_PREFIX
-		     << _textures[tex_path] << SEPARATOR << opacity_color
-		     << std::endl;
+                     << _textures[tex_path] << SEPARATOR << opacity_color
+                     << std::endl;
         }
 }
 
@@ -480,16 +481,32 @@ void converter::convert_compressed_texture(const aiTexture *texture) {
         convert_compressed_texture(texture->mFilename.C_Str());
 }
 
+std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
+	std::ostringstream ss;
+	ss << std::fixed << fl.value();
+	const std::string str = ss.str();
+	return stream << str.substr(0, str.find_last_not_of("0") + 1);
+}
+
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
-        return stream << "(" << color.r << "," << color.g << "," << color.b
-                      << ")";
+        return stream
+		<< "(" << better_float(color.r)
+		<< "," << better_float(color.g)
+		<< "," << better_float(color.b)
+		<< ")";
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiColor4D &color) {
-        return stream << "(" << color.r << "," << color.g << "," << color.b << "," << color.a
-                      << ")";
+        return stream
+		<< "(" << better_float(color.r)
+		<< "," << better_float(color.g)
+		<< "," << better_float(color.b)
+		<< "," << better_float(color.a) << ")";
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec) {
-        return stream << vec.x << "," << vec.y << "," << vec.z;
+        return stream
+		<< better_float(vec.x) << ","
+		<< better_float(vec.y) << ","
+		<< better_float(vec.z);
 }
