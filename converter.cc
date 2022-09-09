@@ -86,6 +86,8 @@ converter::converter(const std::string &file, std::ostream &out,
                                     | (aiProcess_GenSmoothNormals * smooth)
                                     | aiProcess_FlipWindingOrder)),
       scene_name(name) {
+	if (_scene == nullptr)
+		throw std::runtime_error("could not load file");
         _out << std::setiosflags(std::ios_base::fixed);
 }
 
@@ -361,7 +363,7 @@ void converter::write_mesh(const aiMesh *mesh,
                 aiVector3D point = vertices[idx];
                 point *= transformation;
                 vertex vert;
-                vert.point = { point.x, point.y, point.z };
+                vert.point = { point.x, point.z, point.y };
                 if (uvs.size() > 0) {
                         vert.uv = { uvs[idx].x, uvs[idx].y };
                 }
@@ -369,7 +371,7 @@ void converter::write_mesh(const aiMesh *mesh,
                         aiVector3D normal = normals[idx];
                         normal *= transformation; // TODO check if this
                                                   // transformation is needed
-                        vert.normal = { normal.x, normal.y, normal.z };
+                        vert.normal = { normal.x, normal.z, normal.y };
                 }
                 indices.push_back(vert);
                 if (_vertices.contains(vert)) {
