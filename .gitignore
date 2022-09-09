@@ -10,3 +10,4 @@
 *.bmp
 converter
 tags
+/build
