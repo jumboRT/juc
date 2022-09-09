@@ -29,11 +29,16 @@ int main(int argc, char *argv[]) {
         pdesc.add("input-file", -1);
 
         po::variables_map vm;
-        po::store(po::command_line_parser(argc, argv)
-                      .options(desc)
-                      .positional(pdesc)
-                      .run(),
-                  vm);
+	try {
+		po::store(po::command_line_parser(argc, argv)
+			      .options(desc)
+			      .positional(pdesc)
+			      .run(),
+			  vm);
+	} catch (const std::exception &ex) {
+		std::cerr << argv[0] << ": " << ex.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 
         po::notify(vm);
         if (vm.count("help")) {
