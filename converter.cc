@@ -86,7 +86,8 @@ converter::converter(const std::string &file, std::ostream &out,
                                 aiProcess_Triangulate
                                     | (aiProcess_GenSmoothNormals * smooth)
                                     | aiProcess_FlipWindingOrder
-				    | aiProcess_JoinIdenticalVertices)),
+				    | aiProcess_JoinIdenticalVertices
+				    )),
       _pool(12), scene_name(name) {
         if (_scene == nullptr)
                 throw std::runtime_error("could not load file");
@@ -101,7 +102,6 @@ void converter::convert() {
         write_materials();
         write_node(_scene->mRootNode);
 	_pool.join();
-        std::cerr << "vertices: " << _vertices.size() << std::endl;
         std::cerr << "triangles: " << _triangles << std::endl;
 }
 
@@ -417,7 +417,7 @@ void converter::write_mesh(const aiMesh *mesh,
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
         _out << MAT_USE_DIRECTIVE << SEPARATOR << MAT_PREFIX
              << _materials[mesh->mMaterialIndex] << std::endl;
-        std::vector<vertex> indices;
+        //std::vector<vertex> indices;
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
                 aiVector3D point = vertices[idx];
                 point *= transformation;
@@ -432,18 +432,21 @@ void converter::write_mesh(const aiMesh *mesh,
                                                   // transformation is needed
                         vert.normal = { normal.x, normal.z, normal.y };
                 }
+		/*
                 indices.push_back(vert);
                 if (_vertices.contains(vert)) {
 			std::cerr << "duplicate" << std::endl;
                         continue;
                 }
                 _vertices[vert] = _vertices.size();
+		*/
                 write_vertex(vert);
         }
         std::for_each_n(mesh->mFaces, mesh->mNumFaces,
-                        [this, &indices](const aiFace &face) {
-                                write_face(face, indices);
+                        [this](const aiFace &face) {
+                                write_face(face);
                         });
+	_vertices_count += vertices.size();
 }
 
 void converter::write_vertex(const vertex &vertex) {
@@ -462,13 +465,12 @@ void converter::write_vertex(const vertex &vertex) {
         }
 }
 
-void converter::write_face(const aiFace &face,
-                           const std::vector<vertex> &indices) {
+void converter::write_face(const aiFace &face) {
         _triangles += 1;
         _out << FACE_DIRECTIVE << SEPARATOR
-             << _vertices[indices.at(face.mIndices[0])] << SEPARATOR
-             << _vertices[indices.at(face.mIndices[1])] << SEPARATOR
-             << _vertices[indices.at(face.mIndices[2])] << std::endl;
+             << _vertices_count + face.mIndices[0] << SEPARATOR
+             << _vertices_count + face.mIndices[1] << SEPARATOR
+             << _vertices_count + face.mIndices[2] << std::endl;
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {
@@ -540,4 +542,12 @@ std::ostream &operator<<(std::ostream &stream, const aiColor4D &color) {
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec) {
         return stream << better_float(vec.x) << "," << better_float(vec.y)
                       << "," << better_float(vec.z);
+}
+
+std::ostream &operator<<(std::ostream &stream, const math::vector<float, 2> &vec) {
+	return stream << vec[0] << "," << vec[1];
+}
+
+std::ostream &operator<<(std::ostream &stream, const math::vector<float, 3> &vec) {
+	return stream << vec[0] << "," << vec[1] << "," << vec[2];
 }

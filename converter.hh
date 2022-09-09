@@ -121,7 +121,8 @@ class converter {
         bool smooth;
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
-        std::unordered_map<vertex, std::size_t> _vertices;
+        //std::unordered_map<vertex, std::size_t> _vertices;
+	std::size_t _vertices_count = 0;
         std::vector<std::string> _materials;
         std::size_t _triangles = 0;
 	boost::asio::thread_pool _pool;
@@ -179,8 +180,7 @@ class converter {
         void write_node(const aiNode *node);
         void write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation);
         void write_vertex(const vertex &vert);
-        void write_face(const aiFace &face,
-                        const std::vector<vertex> &indices);
+        void write_face(const aiFace &face);
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
@@ -198,15 +198,7 @@ std::ostream &operator<<(std::ostream &stream, const better_float &fl);
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color);
 std::ostream &operator<<(std::ostream &stream, const aiColor4D &color);
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec);
-
-template <std::size_t N>
-std::ostream &operator<<(std::ostream &stream,
-                         const math::vector<float, N> &vector) {
-        std::string separator;
-        for (auto &&x : vector) {
-                stream << separator << better_float(x);
-                separator = ",";
-        }
-        return stream;
-}
+std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec);
+std::ostream &operator<<(std::ostream &stream, const math::vector<float, 2> &vec);
+std::ostream &operator<<(std::ostream &stream, const math::vector<float, 3> &vec);
 #endif
