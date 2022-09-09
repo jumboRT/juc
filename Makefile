@@ -7,7 +7,7 @@ OBJECT_FILES	:= $(addprefix $(OBJ_DIR)/,$(OBJECT_FILES))
 
 CXX				:= g++
 
-CXXFLAGS	:= -Wall -Wextra -std=c++20 -g3 -Ofast \
+CXXFLAGS	:= -Wall -Wextra -std=c++20 -g0 -O3 \
 			   `Magick++-config --cppflags --cxxflags`
 LFLAGS		:= -lassimp -lboost_program_options \
 			   `Magick++-config --ldflags --libs`
