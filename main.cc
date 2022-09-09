@@ -4,6 +4,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <stdexcept>
+#include <string>
 
 void print_usage(const std::string &name) {
         std::cerr << name << " <model>" << std::endl;

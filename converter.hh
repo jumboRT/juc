@@ -7,10 +7,7 @@
 #include <assimp/scene.h>
 #include <boost/container_hash/hash.hpp>
 #include <filesystem>
-#include <initializer_list>
-#include <iostream>
 #include <optional>
-#include <span>
 #include <string>
 #include <unordered_map>
 
@@ -58,11 +55,11 @@ std::size_t hash_value(const vector<T, N> &vector) {
 }
 
 class better_float {
-	float _val;
+        float _val;
 
-	public:
-		constexpr better_float(float val) noexcept : _val(val) { }
-		constexpr float value() const noexcept { return _val; }
+      public:
+        constexpr better_float(float val) noexcept : _val(val) {}
+        constexpr float value() const noexcept { return _val; }
 };
 
 struct vertex {

@@ -1,17 +1,14 @@
 #include "converter.hh"
-#include <algorithm>
+#include <assimp/matrix4x4.h>
 #include <assimp/postprocess.h>
-#include <assimp/scene.h>
 #include <assimp/texture.h>
 #include <chrono>
 #include <ctime>
-#include <fstream>
-#include <functional>
 #include <iomanip>
 #include <iostream>
 #include <span>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 
 vertex::vertex(math::vector<float, 3> point) : point(point) {}
 
@@ -482,31 +479,25 @@ void converter::convert_compressed_texture(const aiTexture *texture) {
 }
 
 std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
-	std::ostringstream ss;
-	ss << std::fixed << fl.value();
-	const std::string str = ss.str();
-	return stream << str.substr(0, str.find_last_not_of("0") + 1);
+        std::ostringstream ss;
+        ss << std::fixed << fl.value();
+        const std::string str = ss.str();
+        return stream << str.substr(0, str.find_last_not_of("0") + 1);
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
-        return stream
-		<< "(" << better_float(color.r)
-		<< "," << better_float(color.g)
-		<< "," << better_float(color.b)
-		<< ")";
+        return stream << "(" << better_float(color.r) << ","
+                      << better_float(color.g) << "," << better_float(color.b)
+                      << ")";
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiColor4D &color) {
-        return stream
-		<< "(" << better_float(color.r)
-		<< "," << better_float(color.g)
-		<< "," << better_float(color.b)
-		<< "," << better_float(color.a) << ")";
+        return stream << "(" << better_float(color.r) << ","
+                      << better_float(color.g) << "," << better_float(color.b)
+                      << "," << better_float(color.a) << ")";
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec) {
-        return stream
-		<< better_float(vec.x) << ","
-		<< better_float(vec.y) << ","
-		<< better_float(vec.z);
+        return stream << better_float(vec.x) << "," << better_float(vec.y)
+                      << "," << better_float(vec.z);
 }
