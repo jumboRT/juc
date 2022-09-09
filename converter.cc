@@ -58,7 +58,6 @@ texture_converter::texture_converter(const std::filesystem::path &from,
         if (std::filesystem::status(from).type()
             == std::filesystem::file_type::directory)
                 throw std::runtime_error(from.string() + ": is a directory");
-
         _image.read(from_path.string());
 
         std::filesystem::path tmp(to);
@@ -72,24 +71,33 @@ texture_converter::texture_converter(const std::string &from,
 
 texture_converter::~texture_converter() {}
 
-void texture_converter::convert() { _image.write(to_path.string()); }
+void texture_converter::convert() {
+	_image.depth(32);
+	_image.colorSpace(Magick::sRGBColorspace);
+	_image.alpha(true);
+	_image.write(to_path.string());
+}
 
 converter::converter(const std::string &file, std::ostream &out,
                      const std::string &name, bool gen_smooth_norm)
     : _file(file), _out(out), _importer(), smooth(gen_smooth_norm),
-      _scene(_importer.ReadFile(_file.c_str(), aiProcess_Triangulate | (aiProcess_GenSmoothNormals * smooth)
-			      | aiProcess_FlipWindingOrder)),
+      _scene(_importer.ReadFile(_file.c_str(),
+                                aiProcess_Triangulate
+                                    | (aiProcess_GenSmoothNormals * smooth)
+                                    | aiProcess_FlipWindingOrder)),
       scene_name(name) {
-	      _out << std::setiosflags(std::ios_base::fixed);
+        _out << std::setiosflags(std::ios_base::fixed);
 }
 
 void converter::convert() {
         write_header();
-	write_cameras();
-	write_lights();
+        write_cameras();
+        write_lights();
         write_global_textures();
         write_materials();
         write_node(_scene->mRootNode);
+	std::cerr << "vertices: " << _vertices.size() << std::endl;
+	std::cerr << "triangles: " << _triangles << std::endl;
 }
 
 void converter::write_header() {
@@ -102,63 +110,71 @@ void converter::write_header() {
 }
 
 void converter::write_cameras() {
-	bool first = true;
-	if (_scene->mNumCameras == 0)
-		_out << DEFAULT_CAMERA << std::endl;
-	std::for_each_n(_scene->mCameras, _scene->mNumCameras,
-			[this, &first](const aiCamera *camera) { 
-				if (!first)
-					_out << COMMENT_DIRECTIVE << SEPARATOR;
-				write_camera(camera);
-				first = false;
-			});
+        bool first = true;
+        if (_scene->mNumCameras == 0)
+                _out << DEFAULT_CAMERA << std::endl;
+        std::for_each_n(_scene->mCameras, _scene->mNumCameras,
+                        [this, &first](const aiCamera *camera) {
+                                if (!first)
+                                        _out << COMMENT_DIRECTIVE << SEPARATOR;
+                                write_camera(camera);
+                                first = false;
+                        });
 }
 
 void converter::write_lights() {
-	//write_all(_scene->mLights, _scene->mNumLights, &converter::write_light);
-	std::for_each_n(_scene->mLights, _scene->mNumLights,
-			[this](const aiLight *light) { write_light(light); });
+        // write_all(_scene->mLights, _scene->mNumLights,
+        // &converter::write_light);
+        std::for_each_n(_scene->mLights, _scene->mNumLights,
+                        [this](const aiLight *light) { write_light(light); });
 }
 
 void converter::write_camera(const aiCamera *camera) {
-	_out << CAMERA_DIRECTIVE << SEPARATOR << camera->mPosition
-		<< SEPARATOR << camera->mLookAt << SEPARATOR
-		<< (camera->mHorizontalFOV * (180/std::acos(0.0))) << std::endl;
+        _out << CAMERA_DIRECTIVE << SEPARATOR << camera->mPosition << SEPARATOR
+             << camera->mLookAt << SEPARATOR
+             << (camera->mHorizontalFOV * (180 / std::acos(0.0))) << std::endl;
 }
 
 void converter::write_light(const aiLight *light) {
-	static bool warned = false;
-	
-	if (!warned && (light->mType == aiLightSource_DIRECTIONAL ||
-				light->mType == aiLightSource_POINT ||
-				light->mType == aiLightSource_SPOT ||
-				light->mType == aiLightSource_AREA)) {
-		std::cerr << "warning: scene contains light a directional/point/spot/area or "
-			<< "other type of light that has no volume. jumboRT currently has no "
-			<< "support for lights without a surface area. juc will try it's best to "
-			<< "convert these lights to jumboRT variants" << std::endl;
-		warned = true;
-	}
-	if (light->mType == aiLightSource_AMBIENT) {
-		write_light_ambient(light);
-	} else if (light->mType == aiLightSource_POINT) {
-		write_light_point(light);
-	}
+        static bool warned = false;
+
+        if (!warned
+            && (light->mType == aiLightSource_DIRECTIONAL
+                || light->mType == aiLightSource_POINT
+                || light->mType == aiLightSource_SPOT
+                || light->mType == aiLightSource_AREA)) {
+                std::cerr << "warning: scene contains light a "
+                             "directional/point/spot/area or "
+                          << "other type of light that has no volume. jumboRT "
+                             "currently has no "
+                          << "support for lights without a surface area. juc "
+                             "will try it's best to "
+                          << "convert these lights to jumboRT variants"
+                          << std::endl;
+                warned = true;
+        }
+        if (light->mType == aiLightSource_AMBIENT) {
+                write_light_ambient(light);
+        } else if (light->mType == aiLightSource_POINT) {
+                write_light_point(light);
+        }
 }
 
 void converter::write_light_ambient(const aiLight *light) {
-	static bool first = true;
-	
-	if (!first) {
-		_out << COMMENT;
-	}
-	_out << AMBIENT_LIGHT_DIRECTIVE << SEPARATOR << AMBIENT_LIGHT_DEFAULT_BRIGHTNESS
-		<< SEPARATOR << light->mColorDiffuse << std::endl;
+        static bool first = true;
+
+        if (!first) {
+                _out << COMMENT;
+        }
+        _out << AMBIENT_LIGHT_DIRECTIVE << SEPARATOR
+             << AMBIENT_LIGHT_DEFAULT_BRIGHTNESS << SEPARATOR
+             << light->mColorDiffuse << std::endl;
 }
 
 void converter::write_light_point(const aiLight *light) {
-	_out << POINT_LIGHT_DIRECTIVE << SEPARATOR << (light->mSize.x * light->mSize.y)
-		<< SEPARATOR << light->mColorDiffuse << std::endl;
+        _out << POINT_LIGHT_DIRECTIVE << SEPARATOR
+             << (light->mSize.x * light->mSize.y) << SEPARATOR
+             << light->mColorDiffuse << std::endl;
 }
 
 void converter::write_node(const aiNode *node) {
@@ -213,9 +229,9 @@ void converter::write_material(const aiMaterial *material) {
              << std::endl;
         write_material_diffuse(material);
         write_material_emissive(material);
-	if (smooth) {
-		_out << MAT_INDENT << MAT_SMOOTH_DIRECTIVE << std::endl;
-	}
+        if (smooth) {
+                _out << MAT_INDENT << MAT_SMOOTH_DIRECTIVE << std::endl;
+        }
         _out << MAT_END_DIRECTIVE << std::endl;
         _materials.push_back(name);
 }
@@ -340,6 +356,7 @@ void converter::write_mesh(const aiMesh *mesh,
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
         _out << MAT_USE_DIRECTIVE << SEPARATOR << MAT_PREFIX
              << _materials[mesh->mMaterialIndex] << std::endl;
+	std::vector<vertex> indices;
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
                 aiVector3D point = vertices[idx];
                 point *= transformation;
@@ -354,7 +371,7 @@ void converter::write_mesh(const aiMesh *mesh,
                                                   // transformation is needed
                         vert.normal = { normal.x, normal.y, normal.z };
                 }
-		_indices.push_back(vert);
+                indices.push_back(vert);
                 if (_vertices.contains(vert)) {
                         continue;
                 }
@@ -362,7 +379,7 @@ void converter::write_mesh(const aiMesh *mesh,
                 write_vertex(vert);
         }
         std::for_each_n(mesh->mFaces, mesh->mNumFaces,
-                        [this](const aiFace &face) { write_face(face); });
+                        [this, &indices](const aiFace &face) { write_face(face, indices); });
 }
 
 void converter::write_vertex(const vertex &vertex) {
@@ -381,10 +398,13 @@ void converter::write_vertex(const vertex &vertex) {
         }
 }
 
-void converter::write_face(const aiFace &face) {
-        _out << FACE_DIRECTIVE << SEPARATOR << _vertices[_indices.at(face.mIndices[0])]
-		<< SEPARATOR << _vertices[_indices.at(face.mIndices[1])]
-		<< SEPARATOR << _vertices[_indices.at(face.mIndices[2])] << std::endl;
+void converter::write_face(const aiFace &face,
+		const std::vector<vertex> &indices) {
+	_triangles += 1;
+        _out << FACE_DIRECTIVE << SEPARATOR
+             << _vertices[indices.at(face.mIndices[0])] << SEPARATOR
+             << _vertices[indices.at(face.mIndices[1])] << SEPARATOR
+             << _vertices[indices.at(face.mIndices[2])] << std::endl;
 }
 
 void converter::convert_raw_texture(const aiTexture *texture) {
@@ -404,8 +424,9 @@ std::filesystem::path converter::texture_path(const std::string &name) {
 void converter::convert_compressed_texture(const std::string &tex_path) {
         const std::string name = texture_name(tex_path);
         const std::filesystem::path out_path = texture_path(name);
-	std::filesystem::path rel_path = std::filesystem::path(_file).remove_filename()
-		/ std::filesystem::path(tex_path);
+        std::filesystem::path rel_path
+            = std::filesystem::path(_file).remove_filename()
+              / std::filesystem::path(tex_path);
 
         _out << TEX_DIRECTIVE << SEPARATOR << TEX_PREFIX << name << SEPARATOR
              << out_path.string() << std::endl;
@@ -422,6 +443,6 @@ std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
                       << ")";
 }
 
-std::ostream &operator<<(std::ostream &stream, const aiVector3D& vec) {
-	return stream << vec.x << "," << vec.y << "," << vec.z;
+std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec) {
+        return stream << vec.x << "," << vec.y << "," << vec.z;
 }

@@ -21,7 +21,7 @@ const static std::string CAMERA_DIRECTIVE = "C";
 const static std::string AMBIENT_LIGHT_DIRECTIVE = "A";
 const static std::string AMBIENT_LIGHT_DEFAULT_BRIGHTNESS = "";
 const static std::string POINT_LIGHT_DIRECTIVE = "l";
-const static std::string TEX_DIRECTIVE = "tex";
+const static std::string TEX_DIRECTIVE = "tex_def";
 const static std::string MAT_USE_DIRECTIVE = "mat_use";
 const static std::string MAT_BEGIN_DIRECTIVE = "mat_beg";
 const static std::string MAT_PREFIX = "mat_";
@@ -112,8 +112,8 @@ class converter {
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
         std::unordered_map<vertex, std::size_t> _vertices;
-	std::vector<vertex> _indices;
         std::vector<std::string> _materials;
+	std::size_t _triangles = 0;
 
       public:
         const std::string scene_name;
@@ -164,7 +164,7 @@ class converter {
         void write_node(const aiNode *node);
         void write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation);
         void write_vertex(const vertex &vert);
-        void write_face(const aiFace &face);
+        void write_face(const aiFace &face, const std::vector<vertex> &indices);
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
