@@ -16,6 +16,7 @@ int main(int argc, char *argv[]) {
 
         // add option to add custom header
         // add option to flip triangulation
+	// check if input file exists, because assimp doesn't check that
         desc.add_options()("help,h", "produce a help message")(
             "input-file,i", po::value<std::filesystem::path>(),
             "specify the model to convert")(

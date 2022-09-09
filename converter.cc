@@ -231,6 +231,7 @@ void converter::write_material(const aiMaterial *material) {
              << std::endl;
         write_material_diffuse(material);
         write_material_emissive(material);
+	write_material_opacity(material);
         if (smooth) {
                 _out << MAT_INDENT << MAT_SMOOTH_DIRECTIVE << std::endl;
         }
@@ -255,6 +256,25 @@ void converter::write_material_emissive(const aiMaterial *material) {
                         write_emissive_directive(emissive_color, path.C_Str());
                 }
         }
+}
+
+void converter::write_material_opacity(const aiMaterial *material) {
+	aiColor3D opacity_color;
+
+	material->Get(AI_MATKEY_OPACITY, opacity_color);
+	const std::size_t count
+		= material->GetTextureCount(aiTextureType_OPACITY);
+	if (count == 0) {
+		write_opacity_directive(opacity_color);
+	} else {
+		for (std::size_t idx = 0; idx < count; ++idx) {
+			aiString path;
+			material->GetTexture(aiTextureType_OPACITY, idx,
+					&path, nullptr, nullptr, nullptr,
+					nullptr);
+			write_opacity_directive(opacity_color, path.C_Str());
+		}
+	}
 }
 
 void converter::write_material_specular(const aiMaterial *material) {
@@ -305,6 +325,11 @@ void converter::write_emissive_directive(aiColor3D emissive_color) {
              << std::endl;
 }
 
+void converter::write_opacity_directive(aiColor3D opacity_color) {
+	_out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
+		<< opacity_color << std::endl;
+}
+
 void converter::write_specular_directive(aiColor3D specular_color) {
         _out << MAT_INDENT << MAT_SPECULAR_DIRECTIVE << SEPARATOR
              << MAT_SPECULAR_DEFAULT_FUZZY << SEPARATOR << specular_color
@@ -332,6 +357,18 @@ void converter::write_emissive_directive(aiColor3D emissive_color,
                      << MAT_DEFAULT_BRIGHTNESS << SEPARATOR << MAT_FILTER
                      << SEPARATOR << TEX_PREFIX << _textures[tex_path]
                      << SEPARATOR << emissive_color << std::endl;
+        }
+}
+
+void converter::write_opacity_directive(aiColor3D opacity_color,
+                                         const std::string &tex_path) {
+        if (tex_path.empty()) {
+                write_opacity_directive(opacity_color);
+        } else {
+                _out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
+                     << MAT_FILTER << SEPARATOR << TEX_PREFIX
+		     << _textures[tex_path] << SEPARATOR << opacity_color
+		     << std::endl;
         }
 }
 
