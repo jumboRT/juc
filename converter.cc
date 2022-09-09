@@ -9,6 +9,9 @@
 #include <span>
 #include <sstream>
 #include <stdexcept>
+#include <string_view>
+#include <boost/bind/bind.hpp>
+#include <boost/asio.hpp>
 
 vertex::vertex(math::vector<float, 3> point) : point(point) {}
 
@@ -82,8 +85,9 @@ converter::converter(const std::string &file, std::ostream &out,
       _scene(_importer.ReadFile(_file.c_str(),
                                 aiProcess_Triangulate
                                     | (aiProcess_GenSmoothNormals * smooth)
-                                    | aiProcess_FlipWindingOrder)),
-      scene_name(name) {
+                                    | aiProcess_FlipWindingOrder
+				    | aiProcess_JoinIdenticalVertices)),
+      _pool(12), scene_name(name) {
         if (_scene == nullptr)
                 throw std::runtime_error("could not load file");
         _out << std::setiosflags(std::ios_base::fixed);
@@ -96,6 +100,7 @@ void converter::convert() {
         write_global_textures();
         write_materials();
         write_node(_scene->mRootNode);
+	_pool.join();
         std::cerr << "vertices: " << _vertices.size() << std::endl;
         std::cerr << "triangles: " << _triangles << std::endl;
 }
@@ -206,6 +211,17 @@ void converter::convert_texture(const aiTexture *texture) {
         }
 }
 
+void converter::write_texture(const std::string &scene_name,
+		const std::string &file, const std::string &tex_path) {
+        const std::string name = converter::texture_name(tex_path);
+        const std::filesystem::path out_path = converter::texture_path(scene_name, name);
+        std::filesystem::path rel_path
+            = std::filesystem::path(file).remove_filename()
+              / std::filesystem::path(tex_path);
+
+        texture_converter(rel_path.string(), out_path.string()).convert();
+}
+
 void converter::write_material(const aiMaterial *material) {
         for (std::size_t type = 0; type <= AI_TEXTURE_TYPE_MAX; ++type) {
                 std::size_t idx = 0;
@@ -219,8 +235,15 @@ void converter::write_material(const aiMaterial *material) {
                                 break;
                         }
                         if (std::string(path.C_Str()).empty() == false
-                            && !_textures.contains(path.C_Str()))
+                            && !_textures.contains(path.C_Str())) {
+				boost::asio::post(_pool,
+					boost::bind(
+						&converter::write_texture,
+						scene_name,
+						_file,
+						std::string(path.C_Str())));
                                 convert_compressed_texture(path.C_Str());
+			}
                         ++idx;
                 }
         }
@@ -411,6 +434,7 @@ void converter::write_mesh(const aiMesh *mesh,
                 }
                 indices.push_back(vert);
                 if (_vertices.contains(vert)) {
+			std::cerr << "duplicate" << std::endl;
                         continue;
                 }
                 _vertices[vert] = _vertices.size();
@@ -457,8 +481,13 @@ std::string converter::texture_name(const std::string &path) {
         return std::filesystem::path(path).stem().string();
 }
 
-std::filesystem::path converter::texture_path(const std::string &name) {
+std::filesystem::path converter::texture_path(const std::string &scene_name,
+		const std::string &name) {
         return std::filesystem::path(scene_name) / (name + TEX_EXT);
+}
+
+std::filesystem::path converter::texture_path(const std::string &name) {
+	return texture_path(scene_name, name);
 }
 
 void converter::convert_compressed_texture(const std::string &tex_path) {
@@ -470,7 +499,7 @@ void converter::convert_compressed_texture(const std::string &tex_path) {
 
         _out << TEX_DIRECTIVE << SEPARATOR << TEX_PREFIX << name << SEPARATOR
              << out_path.string() << std::endl;
-        texture_converter(rel_path.string(), out_path.string()).convert();
+        //texture_converter(rel_path.string(), out_path.string()).convert();
         _textures[tex_path] = name;
 }
 
@@ -479,10 +508,21 @@ void converter::convert_compressed_texture(const aiTexture *texture) {
 }
 
 std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
+	/*
         std::ostringstream ss;
         ss << std::fixed << fl.value();
         const std::string str = ss.str();
         return stream << str.substr(0, str.find_last_not_of("0") + 1);
+	*/
+	char buffer[64];
+	int idx = snprintf(buffer, 16, "%f", fl.value()) - 1;
+	if (idx < 0)
+		return stream;
+	if (idx >= 64)
+		idx = 63;
+	while (idx > 0 && buffer[idx] == '0')
+		--idx;
+	return stream << std::string_view(buffer, idx);
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {

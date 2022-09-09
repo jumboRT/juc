@@ -6,10 +6,13 @@
 #include <assimp/matrix4x4.h>
 #include <assimp/scene.h>
 #include <boost/container_hash/hash.hpp>
+#include <boost/asio/thread_pool.hpp>
+#include <boost/unordered_map.hpp>
 #include <filesystem>
 #include <optional>
 #include <string>
 #include <unordered_map>
+#include <functional>
 
 const static std::string SEPARATOR = " ";
 const static std::string COMMENT_DIRECTIVE = "#";
@@ -87,7 +90,7 @@ struct vertex {
 };
 
 template <> struct std::hash<vertex> {
-        std::size_t operator()(const vertex &vert) const noexcept {
+        constexpr std::size_t operator()(const vertex &vert) const noexcept {
                 std::size_t seed = 0;
                 boost::hash_combine(seed, vert.point);
                 boost::hash_combine(seed, vert.uv);
@@ -121,6 +124,7 @@ class converter {
         std::unordered_map<vertex, std::size_t> _vertices;
         std::vector<std::string> _materials;
         std::size_t _triangles = 0;
+	boost::asio::thread_pool _pool;
 
       public:
         const std::string scene_name;
@@ -182,7 +186,12 @@ class converter {
         void convert_compressed_texture(const std::string &path);
         void convert_compressed_texture(const aiTexture *texture);
         std::filesystem::path texture_path(const std::string &name);
+      public:
+	static std::filesystem::path texture_path(
+			const std::string &scene_name, const std::string &name);
         static std::string texture_name(const std::string &path);
+        static void write_texture(const std::string &scene_name, 
+			const std::string &file, const std::string &path);
 };
 
 std::ostream &operator<<(std::ostream &stream, const better_float &fl);
