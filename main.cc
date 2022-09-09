@@ -11,6 +11,7 @@ void print_usage(const std::string &name) {
 
 int main(int argc, char *argv[]) {
         namespace po = boost::program_options;
+        namespace fs = std::filesystem;
         po::options_description desc("options");
         po::positional_options_description pdesc;
 
@@ -18,7 +19,7 @@ int main(int argc, char *argv[]) {
         // add option to flip triangulation
         // check if input file exists, because assimp doesn't check that
         desc.add_options()("help,h", "produce a help message")(
-            "input-file,i", po::value<std::filesystem::path>(),
+            "input-file,i", po::value<fs::path>(),
             "specify the model to convert")(
             "output-file,o", po::value<std::string>(),
             "specify the file to put the output in")(
@@ -50,8 +51,16 @@ int main(int argc, char *argv[]) {
                           << std::endl;
                 return EXIT_FAILURE;
         }
-        std::filesystem::path in_file
-            = vm["input-file"].as<std::filesystem::path>();
+        const fs::path in_file = vm["input-file"].as<fs::path>();
+        if (!fs::exists(in_file)) {
+                std::cerr << argv[0] << ": " << in_file.string()
+                          << ": does not exist" << std::endl;
+                return EXIT_FAILURE;
+        } else if (fs::status(in_file).type() == fs::file_type::directory) {
+                std::cerr << argv[0] << ": " << in_file.string()
+                          << ": is a directory" << std::endl;
+                return EXIT_FAILURE;
+        }
         std::string name = in_file.stem();
         if (vm.count("name")) {
                 name = vm["name"].as<std::string>();
