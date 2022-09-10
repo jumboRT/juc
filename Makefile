@@ -18,13 +18,17 @@ endif
 
 ifeq ($(config),debug)
 	ifndef san
-		san := address,undefined
+		san 		:= address,undefined
 	endif
-	CXXFLAGS	+= -g3 -Og -fsanitize=$(san)
-	LFLAGS		+= -g3 -Og -fsanitize=$(san) -fno-inline
+	CXXFLAGS		+= -g3 -Og -fsanitize=$(san)
+	LFLAGS			+= -g3 -Og -fsanitize=$(san) -fno-inline
 else ifeq ($(config),release)
-	CXXFLAGS	+= -g -O2 -fsanitize=$(san)
-	LFLAGS		+= -g -O2 -fsanitize=$(san)
+	CXXFLAGS		+= -g -O2
+	LFLAGS			+= -g -O2
+	ifdef san
+		CXXFLAGS	+= -fsanitize=$(san)
+		LFLAGS		+= -fsanitize=$(san)
+	endif
 else ifeq ($(config),distr)
 	CXXFLAGS	+= -g0 -O3 -march=native
 	LFLAGS		+= -g0 -O3 -march=native -flto
