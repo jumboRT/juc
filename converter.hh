@@ -88,7 +88,7 @@ struct vertex {
 
         void swap(vertex &other) noexcept;
 };
-
+/*
 template <> struct std::hash<vertex> {
         constexpr std::size_t operator()(const vertex &vert) const noexcept {
                 std::size_t seed = 0;
@@ -98,6 +98,7 @@ template <> struct std::hash<vertex> {
                 return seed;
         }
 };
+*/
 
 class texture_converter {
         Magick::Image _image;
@@ -178,9 +179,15 @@ class converter {
                                       const std::string &tex_path);
 
         void write_node(const aiNode *node);
-        void write_mesh(const aiMesh *mesh, const aiMatrix4x4 &transformation);
+        void write_mesh(const aiMesh *mesh);
         void write_vertex(const vertex &vert);
-        void write_face(const aiFace &face);
+        inline void write_face(const aiFace &face) {
+		_triangles += 1;
+		_out << FACE_DIRECTIVE << SEPARATOR
+		     << _vertices_count + face.mIndices[0] << SEPARATOR
+		     << _vertices_count + face.mIndices[1] << SEPARATOR
+		     << _vertices_count + face.mIndices[2] << std::endl;
+	}
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
