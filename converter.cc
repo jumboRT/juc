@@ -270,11 +270,17 @@ void converter::write_material(const aiMaterial *material) {
                         }
                         if (std::string(path.C_Str()).empty() == false
                             && !_textures.contains(path.C_Str())) {
-                                boost::asio::post(
-                                    _pool,
-                                    boost::bind(&converter::write_texture,
-                                                scene_name, _file,
-                                                std::string(path.C_Str())));
+                                boost::asio::post(_pool, [this, path]() {
+                                        try {
+                                                converter::write_texture(
+                                                    scene_name, _file,
+                                                    std::string(path.C_Str()));
+                                        } catch (const std::exception &ex) {
+                                                std::cerr
+                                                    << "error: " << ex.what()
+                                                    << std::endl;
+                                        }
+                                });
                                 convert_compressed_texture(path.C_Str());
                         }
                         ++idx;
