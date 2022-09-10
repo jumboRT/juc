@@ -2,6 +2,8 @@
 #include <assimp/matrix4x4.h>
 #include <assimp/postprocess.h>
 #include <assimp/texture.h>
+#include <boost/asio.hpp>
+#include <boost/bind/bind.hpp>
 #include <chrono>
 #include <ctime>
 #include <iomanip>
@@ -10,9 +12,6 @@
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
-#include <boost/bind/bind.hpp>
-#include <boost/asio.hpp>
-#include <valgrind/callgrind.h>
 
 vertex::vertex(math::vector<float, 3> point) : point(point) {}
 
@@ -83,12 +82,11 @@ void texture_converter::convert() {
 converter::converter(const std::string &file, std::ostream &out,
                      const std::string &name, bool gen_smooth_norm)
     : _file(file), _out(out), _importer(), smooth(gen_smooth_norm),
-      _scene(_importer.ReadFile(_file.c_str(),
-                                aiProcess_Triangulate
-                                    | (aiProcess_GenSmoothNormals * smooth)
-                                    | aiProcess_FlipWindingOrder
-				    | aiProcess_JoinIdenticalVertices
-				    | aiProcess_PreTransformVertices)),
+      _scene(_importer.ReadFile(
+          _file.c_str(),
+          aiProcess_Triangulate | (aiProcess_GenSmoothNormals * smooth)
+              | aiProcess_FlipWindingOrder | aiProcess_JoinIdenticalVertices
+              | aiProcess_PreTransformVertices)),
       _pool(12), scene_name(name) {
         if (_scene == nullptr)
                 throw std::runtime_error("could not load file");
@@ -96,17 +94,13 @@ converter::converter(const std::string &file, std::ostream &out,
 }
 
 void converter::convert() {
-	CALLGRIND_START_INSTRUMENTATION;
-	CALLGRIND_TOGGLE_COLLECT;
         write_header();
         write_cameras();
         write_lights();
         write_global_textures();
         write_materials();
         write_node(_scene->mRootNode);
-	CALLGRIND_TOGGLE_COLLECT;
-	CALLGRIND_STOP_INSTRUMENTATION;
-	_pool.join();
+        _pool.join();
         std::cerr << "triangles: " << _triangles << "\n";
 }
 
@@ -189,9 +183,8 @@ void converter::write_light_point(const aiLight *light) {
 
 void converter::write_node(const aiNode *node) {
         std::for_each_n(
-            node->mMeshes, node->mNumMeshes, [this](unsigned int idx) {
-                    write_mesh(_scene->mMeshes[idx]);
-            });
+            node->mMeshes, node->mNumMeshes,
+            [this](unsigned int idx) { write_mesh(_scene->mMeshes[idx]); });
         std::for_each_n(node->mChildren, node->mNumChildren,
                         [this](const aiNode *child) { write_node(child); });
 }
@@ -217,9 +210,11 @@ void converter::convert_texture(const aiTexture *texture) {
 }
 
 void converter::write_texture(const std::string &scene_name,
-		const std::string &file, const std::string &tex_path) {
+                              const std::string &file,
+                              const std::string &tex_path) {
         const std::string name = converter::texture_name(tex_path);
-        const std::filesystem::path out_path = converter::texture_path(scene_name, name);
+        const std::filesystem::path out_path
+            = converter::texture_path(scene_name, name);
         std::filesystem::path rel_path
             = std::filesystem::path(file).remove_filename()
               / std::filesystem::path(tex_path);
@@ -241,20 +236,18 @@ void converter::write_material(const aiMaterial *material) {
                         }
                         if (std::string(path.C_Str()).empty() == false
                             && !_textures.contains(path.C_Str())) {
-				boost::asio::post(_pool,
-					boost::bind(
-						&converter::write_texture,
-						scene_name,
-						_file,
-						std::string(path.C_Str())));
+                                boost::asio::post(
+                                    _pool,
+                                    boost::bind(&converter::write_texture,
+                                                scene_name, _file,
+                                                std::string(path.C_Str())));
                                 convert_compressed_texture(path.C_Str());
-			}
+                        }
                         ++idx;
                 }
         }
         const std::string name = material->GetName().C_Str();
-        _out << MAT_BEGIN_DIRECTIVE << SEPARATOR << MAT_PREFIX << name
-             << "\n";
+        _out << MAT_BEGIN_DIRECTIVE << SEPARATOR << MAT_PREFIX << name << "\n";
         write_material_diffuse(material);
         write_material_emissive(material);
         write_material_opacity(material);
@@ -348,8 +341,7 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color) {
 
 void converter::write_emissive_directive(aiColor3D emissive_color) {
         _out << MAT_INDENT << MAT_EMISSIVE_DIRECTIVE << SEPARATOR
-             << MAT_DEFAULT_BRIGHTNESS << SEPARATOR << emissive_color
-             << "\n";
+             << MAT_DEFAULT_BRIGHTNESS << SEPARATOR << emissive_color << "\n";
 }
 
 void converter::write_opacity_directive(aiColor4D opacity_color) {
@@ -435,10 +427,8 @@ void converter::write_mesh(const aiMesh *mesh) {
                 write_vertex(vert);
         }
         std::for_each_n(mesh->mFaces, mesh->mNumFaces,
-                        [this](const aiFace &face) {
-                                write_face(face);
-                        });
-	_vertices_count += vertices.size();
+                        [this](const aiFace &face) { write_face(face); });
+        _vertices_count += vertices.size();
 }
 
 void converter::write_vertex(const vertex &vertex) {
@@ -478,12 +468,12 @@ std::string converter::texture_name(const std::string &path) {
 }
 
 std::filesystem::path converter::texture_path(const std::string &scene_name,
-		const std::string &name) {
+                                              const std::string &name) {
         return std::filesystem::path(scene_name) / (name + TEX_EXT);
 }
 
 std::filesystem::path converter::texture_path(const std::string &name) {
-	return texture_path(scene_name, name);
+        return texture_path(scene_name, name);
 }
 
 void converter::convert_compressed_texture(const std::string &tex_path) {
@@ -495,7 +485,7 @@ void converter::convert_compressed_texture(const std::string &tex_path) {
 
         _out << TEX_DIRECTIVE << SEPARATOR << TEX_PREFIX << name << SEPARATOR
              << out_path.string() << "\n";
-        //texture_converter(rel_path.string(), out_path.string()).convert();
+        // texture_converter(rel_path.string(), out_path.string()).convert();
         _textures[tex_path] = name;
 }
 
@@ -504,21 +494,21 @@ void converter::convert_compressed_texture(const aiTexture *texture) {
 }
 
 std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
-	/*
+        /*
         std::ostringstream ss;
         ss << std::fixed << fl.value();
         const std::string str = ss.str();
         return stream << str.substr(0, str.find_last_not_of("0") + 1);
-	*/
-	char buffer[64];
-	int idx = snprintf(buffer, 16, "%f", fl.value()) - 1;
-	if (idx < 0)
-		return stream;
-	if (idx >= 64)
-		idx = 63;
-	while (idx > 0 && buffer[idx] == '0')
-		--idx;
-	return stream << std::string_view(buffer, idx);
+        */
+        char buffer[64];
+        int idx = snprintf(buffer, 16, "%f", fl.value()) - 1;
+        if (idx < 0)
+                return stream;
+        if (idx >= 64)
+                idx = 63;
+        while (idx > 0 && buffer[idx] == '0')
+                --idx;
+        return stream << std::string_view(buffer, idx);
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
@@ -538,10 +528,12 @@ std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec) {
                       << "," << better_float(vec.z);
 }
 
-std::ostream &operator<<(std::ostream &stream, const math::vector<float, 2> &vec) {
-	return stream << vec[0] << "," << vec[1];
+std::ostream &operator<<(std::ostream &stream,
+                         const math::vector<float, 2> &vec) {
+        return stream << vec[0] << "," << vec[1];
 }
 
-std::ostream &operator<<(std::ostream &stream, const math::vector<float, 3> &vec) {
-	return stream << vec[0] << "," << vec[1] << "," << vec[2];
+std::ostream &operator<<(std::ostream &stream,
+                         const math::vector<float, 3> &vec) {
+        return stream << vec[0] << "," << vec[1] << "," << vec[2];
 }
