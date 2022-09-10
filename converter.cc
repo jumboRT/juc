@@ -204,8 +204,16 @@ void converter::write_node(const aiNode *node) {
 
         std::size_t stream_idx = 0;
         for (std::size_t mesh_idx : indices) {
+                const std::size_t vertices_count = _vertices_count;
+                boost::asio::post(_pool, [this, vec, stream_idx, mesh_idx,
+                                          vertices_count]() {
+                        write_mesh(vec->at(stream_idx), _materials,
+                                   vertices_count, _scene->mMeshes[mesh_idx]);
+                });
+                /*
                 write_mesh(vec->at(stream_idx), _materials, _vertices_count,
                            _scene->mMeshes[mesh_idx]);
+                */
                 stream_idx += 1;
                 _vertices_count += _scene->mMeshes[mesh_idx]->mNumVertices;
         }
@@ -518,7 +526,7 @@ std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
         return stream << str.substr(0, str.find_last_not_of("0") + 1);
         /*
         char buffer[64];
-        int idx = snprintf(buffer, 16, "%f", fl.value()) - 1;
+        int idx = snprintf(buffer, 16, "%.4f", fl.value()) - 1;
         if (idx < 0)
                 return stream;
         if (idx >= 64)
@@ -548,10 +556,13 @@ std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec) {
 
 std::ostream &operator<<(std::ostream &stream,
                          const math::vector<float, 2> &vec) {
-        return stream << vec[0] << "," << vec[1];
+        return stream << better_float(vec[0]) << ","
+                      << better_float(vec[1]);
 }
 
 std::ostream &operator<<(std::ostream &stream,
                          const math::vector<float, 3> &vec) {
-        return stream << vec[0] << "," << vec[1] << "," << vec[2];
+        return stream << better_float(vec[0]) << ","
+                      << better_float(vec[1]) << ","
+                      << better_float(vec[2]);
 }
