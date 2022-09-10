@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <string_view>
 
-vertex::vertex(math::vector<float, 3> point) : point(point) {}
+vertex::vertex(math::vector<float, 3> point) : point(point)  {}
 
 vertex::vertex(math::vector<float, 3> point, math::vector<float, 2> uv)
     : point(point), uv(uv) {}
@@ -432,19 +432,9 @@ void converter::write_mesh(const aiMesh *mesh) {
 }
 
 void converter::write_vertex(const vertex &vertex) {
-        if (vertex.uv.has_value() && vertex.normal.has_value()) {
-                _out << VTN_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
-                     << vertex.uv.value() << SEPARATOR << vertex.normal.value()
-                     << "\n";
-        } else if (vertex.uv.has_value()) {
-                _out << VT_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
-                     << vertex.uv.value() << "\n";
-        } else if (vertex.normal.has_value()) {
-                _out << VN_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
-                     << vertex.normal.value() << "\n";
-        } else {
-                _out << V_DIRECTIVE << SEPARATOR << vertex.point << "\n";
-        }
+        _out << VTN_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
+             << vertex.uv << SEPARATOR << vertex.normal
+             << "\n";
 }
 
 /*

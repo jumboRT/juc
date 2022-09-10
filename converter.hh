@@ -50,11 +50,6 @@ const static std::string DEFAULT_CAMERA
 
 namespace math {
 template <typename T, std::size_t N> using vector = std::array<T, N>;
-
-template <typename T, std::size_t N>
-std::size_t hash_value(const vector<T, N> &vector) {
-        return boost::hash<std::array<T, N> >(vector);
-}
 }
 
 class better_float {
@@ -67,17 +62,14 @@ class better_float {
 
 struct vertex {
         math::vector<float, 3> point;
-        std::optional<math::vector<float, 2> > uv;
-        std::optional<math::vector<float, 3> > normal;
+        math::vector<float, 2> uv;
+        math::vector<float, 3> normal;
 
         vertex() = default;
         vertex(math::vector<float, 3> point);
         vertex(math::vector<float, 3> point, math::vector<float, 2> uv);
         vertex(math::vector<float, 3> point, math::vector<float, 2> uv,
                math::vector<float, 3> normal);
-        vertex(math::vector<float, 3> point,
-               std::optional<math::vector<float, 2> > uv,
-               std::optional<math::vector<float, 3> > normal);
         vertex(const vertex &other) = default;
         vertex(vertex &&other) noexcept;
         ~vertex() = default;
