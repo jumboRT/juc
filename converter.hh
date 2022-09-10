@@ -118,7 +118,6 @@ class converter {
         std::vector<std::vector<std::ostringstream>*> _streams;
 	std::size_t _vertices_count = 0;
         std::vector<std::string> _materials;
-        std::size_t _triangles = 0;
 	boost::asio::thread_pool _pool;
 
       public:
@@ -182,14 +181,17 @@ class converter {
 
           then make it multi threaded
         */
-        void write_mesh(std::ostream &stream, const aiMesh *mesh);
-        void write_vertex(std::ostream &stream, const vertex &vert);
-        inline void write_face(std::ostream &stream, const aiFace &face) {
-		_triangles += 1;
+        static void write_mesh(std::ostream &stream,
+                               const std::vector<std::string> &materials,
+                               std::size_t face_offset, const aiMesh *mesh);
+        static void write_vertex(std::ostream &stream, const vertex &vert);
+        inline static void write_face(std::ostream &stream,
+                                      std::size_t face_offset,
+                                      const aiFace &face) {
                 stream << FACE_DIRECTIVE << SEPARATOR
-                       << _vertices_count + face.mIndices[0] << SEPARATOR
-                       << _vertices_count + face.mIndices[1] << SEPARATOR
-                       << _vertices_count + face.mIndices[2] << std::endl;
+                       << face_offset + face.mIndices[0] << SEPARATOR
+                       << face_offset + face.mIndices[1] << SEPARATOR
+                       << face_offset + face.mIndices[2] << std::endl;
         }
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);

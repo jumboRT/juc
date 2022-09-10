@@ -107,7 +107,6 @@ void converter::convert() {
         write_materials();
         write_node(_scene->mRootNode);
         _pool.join();
-        std::cerr << "triangles: " << _triangles << "\n";
         for (auto &x : _streams) {
                 for (auto &stream : *x) {
                         _out << stream.view();
@@ -204,9 +203,11 @@ void converter::write_node(const aiNode *node) {
                 new std::vector<std::ostringstream>(node->mNumMeshes);
 
         std::size_t stream_idx = 0;
-        for (std::size_t idx : indices) {
-                write_mesh(vec->at(stream_idx), _scene->mMeshes[idx]);
+        for (std::size_t mesh_idx : indices) {
+                write_mesh(vec->at(stream_idx), _materials, _vertices_count,
+                           _scene->mMeshes[mesh_idx]);
                 stream_idx += 1;
+                _vertices_count += _scene->mMeshes[mesh_idx]->mNumVertices;
         }
         _streams.push_back(vec);
         
@@ -428,7 +429,9 @@ void converter::write_specular_directive(aiColor3D specular_color,
         }
 }
 
-void converter::write_mesh(std::ostream &stream, const aiMesh *mesh) {
+void converter::write_mesh(std::ostream &stream,
+                           const std::vector<std::string> &materials,
+                           std::size_t face_offset, const aiMesh *mesh) {
         const std::span vertices(mesh->mVertices, mesh->mNumVertices);
         const std::span normals(mesh->mNormals, mesh->mNormals == nullptr
                                                     ? 0
@@ -437,7 +440,7 @@ void converter::write_mesh(std::ostream &stream, const aiMesh *mesh) {
             mesh->mTextureCoords[0],
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
         stream << MAT_USE_DIRECTIVE << SEPARATOR << MAT_PREFIX
-               << _materials[mesh->mMaterialIndex] << "\n";
+               << materials[mesh->mMaterialIndex] << "\n";
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
                 const aiVector3D point = vertices[idx];
                 vertex vert;
@@ -452,8 +455,9 @@ void converter::write_mesh(std::ostream &stream, const aiMesh *mesh) {
                 write_vertex(stream, vert);
         }
         std::for_each_n(mesh->mFaces, mesh->mNumFaces,
-                        [this, &stream](const aiFace &face) { write_face(stream, face); });
-        _vertices_count += vertices.size();
+                        [&stream, face_offset](const aiFace &face) {
+                                write_face(stream, face_offset, face);
+                        });
 }
 
 void converter::write_vertex(std::ostream &stream, const vertex &vertex) {
