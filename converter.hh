@@ -115,6 +115,7 @@ class converter {
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
         //std::unordered_map<vertex, std::size_t> _vertices;
+        std::vector<std::vector<std::ostringstream>*> _streams;
 	std::size_t _vertices_count = 0;
         std::vector<std::string> _materials;
         std::size_t _triangles = 0;
@@ -126,6 +127,7 @@ class converter {
         converter() = delete;
         converter(const std::string &file, std::ostream &out,
                   const std::string &name, bool gen_smooth_norm);
+        ~converter();
 
         void convert();
 

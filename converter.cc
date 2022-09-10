@@ -93,6 +93,12 @@ converter::converter(const std::string &file, std::ostream &out,
         _out << std::setiosflags(std::ios_base::fixed);
 }
 
+converter::~converter() {
+        for (auto &x : _streams) {
+                delete x;
+        }
+}
+
 void converter::convert() {
         write_header();
         write_cameras();
@@ -102,6 +108,11 @@ void converter::convert() {
         write_node(_scene->mRootNode);
         _pool.join();
         std::cerr << "triangles: " << _triangles << "\n";
+        for (auto &x : _streams) {
+                for (auto &stream : *x) {
+                        _out << stream.view();
+                }
+        }
 }
 
 void converter::write_header() {
@@ -182,9 +193,23 @@ void converter::write_light_point(const aiLight *light) {
 }
 
 void converter::write_node(const aiNode *node) {
-        std::for_each_n(
-            node->mMeshes, node->mNumMeshes,
-            [this](unsigned int idx) { write_mesh(_out, _scene->mMeshes[idx]); });
+        const std::span indices(node->mMeshes, node->mNumMeshes);
+        /*
+        std::for_each_n(node->mMeshes, node->mNumMeshes,
+                        [this](unsigned int idx) {
+                                write_mesh(_out, _scene->mMeshes[idx]);
+                        });
+        */
+        std::vector<std::ostringstream>* vec =
+                new std::vector<std::ostringstream>(node->mNumMeshes);
+
+        std::size_t stream_idx = 0;
+        for (std::size_t idx : indices) {
+                write_mesh(vec->at(stream_idx), _scene->mMeshes[idx]);
+                stream_idx += 1;
+        }
+        _streams.push_back(vec);
+        
         std::for_each_n(node->mChildren, node->mNumChildren,
                         [this](const aiNode *child) { write_node(child); });
 }
