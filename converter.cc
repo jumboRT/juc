@@ -184,7 +184,7 @@ void converter::write_light_point(const aiLight *light) {
 void converter::write_node(const aiNode *node) {
         std::for_each_n(
             node->mMeshes, node->mNumMeshes,
-            [this](unsigned int idx) { write_mesh(_scene->mMeshes[idx]); });
+            [this](unsigned int idx) { write_mesh(_out, _scene->mMeshes[idx]); });
         std::for_each_n(node->mChildren, node->mNumChildren,
                         [this](const aiNode *child) { write_node(child); });
 }
@@ -403,7 +403,7 @@ void converter::write_specular_directive(aiColor3D specular_color,
         }
 }
 
-void converter::write_mesh(const aiMesh *mesh) {
+void converter::write_mesh(std::ostream &stream, const aiMesh *mesh) {
         const std::span vertices(mesh->mVertices, mesh->mNumVertices);
         const std::span normals(mesh->mNormals, mesh->mNormals == nullptr
                                                     ? 0
@@ -411,8 +411,8 @@ void converter::write_mesh(const aiMesh *mesh) {
         const std::span uvs(
             mesh->mTextureCoords[0],
             mesh->mTextureCoords[0] == nullptr ? 0 : mesh->mNumVertices);
-        _out << MAT_USE_DIRECTIVE << SEPARATOR << MAT_PREFIX
-             << _materials[mesh->mMaterialIndex] << "\n";
+        stream << MAT_USE_DIRECTIVE << SEPARATOR << MAT_PREFIX
+               << _materials[mesh->mMaterialIndex] << "\n";
         for (std::size_t idx = 0; idx < vertices.size(); ++idx) {
                 const aiVector3D point = vertices[idx];
                 vertex vert;
@@ -424,17 +424,16 @@ void converter::write_mesh(const aiMesh *mesh) {
                         const aiVector3D normal = normals[idx];
                         vert.normal = { normal.x, normal.z, normal.y };
                 }
-                write_vertex(vert);
+                write_vertex(stream, vert);
         }
         std::for_each_n(mesh->mFaces, mesh->mNumFaces,
-                        [this](const aiFace &face) { write_face(face); });
+                        [this, &stream](const aiFace &face) { write_face(stream, face); });
         _vertices_count += vertices.size();
 }
 
-void converter::write_vertex(const vertex &vertex) {
-        _out << VTN_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
-             << vertex.uv << SEPARATOR << vertex.normal
-             << "\n";
+void converter::write_vertex(std::ostream &stream, const vertex &vertex) {
+        stream << VTN_DIRECTIVE << SEPARATOR << vertex.point << SEPARATOR
+               << vertex.uv << SEPARATOR << vertex.normal << "\n";
 }
 
 /*

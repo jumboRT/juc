@@ -171,15 +171,24 @@ class converter {
                                       const std::string &tex_path);
 
         void write_node(const aiNode *node);
-        void write_mesh(const aiMesh *mesh);
-        void write_vertex(const vertex &vert);
-        inline void write_face(const aiFace &face) {
+        /*
+          TODO
+          first make write_mesh static and check if it works
+
+          then try to buffer write_mesh output in ostringstreams and
+          print it at the end and check if it works
+
+          then make it multi threaded
+        */
+        void write_mesh(std::ostream &stream, const aiMesh *mesh);
+        void write_vertex(std::ostream &stream, const vertex &vert);
+        inline void write_face(std::ostream &stream, const aiFace &face) {
 		_triangles += 1;
-		_out << FACE_DIRECTIVE << SEPARATOR
-		     << _vertices_count + face.mIndices[0] << SEPARATOR
-		     << _vertices_count + face.mIndices[1] << SEPARATOR
-		     << _vertices_count + face.mIndices[2] << std::endl;
-	}
+                stream << FACE_DIRECTIVE << SEPARATOR
+                       << _vertices_count + face.mIndices[0] << SEPARATOR
+                       << _vertices_count + face.mIndices[1] << SEPARATOR
+                       << _vertices_count + face.mIndices[2] << std::endl;
+        }
         void convert_texture(const aiTexture *texture);
         void convert_raw_texture(const aiTexture *texture);
         void convert_compressed_texture(const std::string &path);
