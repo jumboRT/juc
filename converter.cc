@@ -484,12 +484,11 @@ void converter::convert_compressed_texture(const aiTexture *texture) {
 }
 
 std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
-        /*
         std::ostringstream ss;
         ss << std::fixed << fl.value();
         const std::string str = ss.str();
         return stream << str.substr(0, str.find_last_not_of("0") + 1);
-        */
+        /*
         char buffer[64];
         int idx = snprintf(buffer, 16, "%f", fl.value()) - 1;
         if (idx < 0)
@@ -499,6 +498,7 @@ std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
         while (idx > 0 && buffer[idx] == '0')
                 --idx;
         return stream << std::string_view(buffer, idx);
+        */
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
