@@ -496,16 +496,6 @@ void converter::write_vertex(std::ostream &stream, const vertex &vertex) {
                << vertex.uv << SEPARATOR << vertex.normal << "\n";
 }
 
-/*
-void converter::write_face(const aiFace &face) {
-        _triangles += 1;
-        _out << FACE_DIRECTIVE << SEPARATOR
-             << _vertices_count + face.mIndices[0] << SEPARATOR
-             << _vertices_count + face.mIndices[1] << SEPARATOR
-             << _vertices_count + face.mIndices[2] << "\n";
-}
-*/
-
 void converter::convert_raw_texture(const aiTexture *texture) {
         (void)texture;
         throw std::runtime_error("conversion of embedded textures is "
