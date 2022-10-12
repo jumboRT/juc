@@ -13,7 +13,7 @@
 #include <stdexcept>
 #include <string_view>
 
-vertex::vertex(math::vector<float, 3> point) : point(point)  {}
+vertex::vertex(math::vector<float, 3> point) : point(point) {}
 
 vertex::vertex(math::vector<float, 3> point, math::vector<float, 2> uv)
     : point(point), uv(uv) {}
@@ -199,8 +199,8 @@ void converter::write_node(const aiNode *node) {
                                 write_mesh(_out, _scene->mMeshes[idx]);
                         });
         */
-        std::vector<std::ostringstream>* vec =
-                new std::vector<std::ostringstream>(node->mNumMeshes);
+        std::vector<std::ostringstream> *vec
+            = new std::vector<std::ostringstream>(node->mNumMeshes);
 
         std::size_t stream_idx = 0;
         for (std::size_t mesh_idx : indices) {
@@ -218,7 +218,7 @@ void converter::write_node(const aiNode *node) {
                 _vertices_count += _scene->mMeshes[mesh_idx]->mNumVertices;
         }
         _streams.push_back(vec);
-        
+
         std::for_each_n(node->mChildren, node->mNumChildren,
                         [this](const aiNode *child) { write_node(child); });
 }
@@ -381,27 +381,26 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color) {
 }
 
 void converter::write_emissive_directive(aiColor3D emissive_color) {
-	if (emissive_color.r == 0.0f && emissive_color.g == 0.0f
-			&& emissive_color.b == 0.0f)
-		return;
+        if (emissive_color.r == 0.0f && emissive_color.g == 0.0f
+            && emissive_color.b == 0.0f)
+                return;
         _out << MAT_INDENT << MAT_EMISSIVE_DIRECTIVE << SEPARATOR
              << MAT_DEFAULT_BRIGHTNESS << SEPARATOR << emissive_color << "\n";
 }
 
 void converter::write_opacity_directive(aiColor4D opacity_color) {
-	if (opacity_color.a == 1.0f)
-		return;
+        if (opacity_color.a == 1.0f)
+                return;
         _out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
              << opacity_color << "\n";
 }
 
 void converter::write_specular_directive(aiColor3D specular_color) {
-	if (specular_color.r == 0.0f && specular_color.g == 0.0f
-			&& specular_color.b == 0.0f)
-		return;
+        if (specular_color.r == 0.0f && specular_color.g == 0.0f
+            && specular_color.b == 0.0f)
+                return;
         _out << MAT_INDENT << MAT_SPECULAR_DIRECTIVE << SEPARATOR
-             << BXDF_DEFAULT_WEIGHT << SEPARATOR << specular_color
-             << "\n";
+             << BXDF_DEFAULT_WEIGHT << SEPARATOR << specular_color << "\n";
 }
 
 void converter::write_diffuse_directive(aiColor3D diffuse_color,
@@ -418,9 +417,9 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color,
 
 void converter::write_emissive_directive(aiColor3D emissive_color,
                                          const std::string &tex_path) {
-	if (emissive_color.r == 0.0f && emissive_color.g == 0.0f
-			&& emissive_color.b == 0.0f)
-		return;
+        if (emissive_color.r == 0.0f && emissive_color.g == 0.0f
+            && emissive_color.b == 0.0f)
+                return;
         if (tex_path.empty()) {
                 write_emissive_directive(emissive_color);
         } else {
@@ -433,8 +432,8 @@ void converter::write_emissive_directive(aiColor3D emissive_color,
 
 void converter::write_opacity_directive(aiColor4D opacity_color,
                                         const std::string &tex_path) {
-	if (opacity_color.a == 1.0f)
-		return;
+        if (opacity_color.a == 1.0f)
+                return;
         if (tex_path.empty()) {
                 write_opacity_directive(opacity_color);
         } else {
@@ -447,9 +446,9 @@ void converter::write_opacity_directive(aiColor4D opacity_color,
 
 void converter::write_specular_directive(aiColor3D specular_color,
                                          const std::string &tex_path) {
-	if (specular_color.r == 0.0f && specular_color.g == 0.0f
-			&& specular_color.b == 0.0f)
-		return;
+        if (specular_color.r == 0.0f && specular_color.g == 0.0f
+            && specular_color.b == 0.0f)
+                return;
         if (tex_path.empty()) {
                 write_specular_directive(specular_color);
         } else {
@@ -536,10 +535,10 @@ std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
         std::ostringstream ss;
         ss << std::fixed << fl.value();
         const std::string str = ss.str();
-	std::string_view view = str;
-	view = view.substr(0, view.find_last_not_of("0") + 1);
-	if (view.ends_with('.'))
-		view = view.substr(0, view.length() - 1);
+        std::string_view view = str;
+        view = view.substr(0, view.find_last_not_of("0") + 1);
+        if (view.ends_with('.'))
+                view = view.substr(0, view.length() - 1);
         return stream << view;
 }
 
@@ -562,13 +561,11 @@ std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec) {
 
 std::ostream &operator<<(std::ostream &stream,
                          const math::vector<float, 2> &vec) {
-        return stream << better_float(vec[0]) << ","
-                      << better_float(vec[1]);
+        return stream << better_float(vec[0]) << "," << better_float(vec[1]);
 }
 
 std::ostream &operator<<(std::ostream &stream,
                          const math::vector<float, 3> &vec) {
-        return stream << better_float(vec[0]) << ","
-                      << better_float(vec[1]) << ","
-                      << better_float(vec[2]);
+        return stream << better_float(vec[0]) << "," << better_float(vec[1])
+                      << "," << better_float(vec[2]);
 }

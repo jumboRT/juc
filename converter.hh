@@ -5,14 +5,14 @@
 #include <assimp/Importer.hpp>
 #include <assimp/matrix4x4.h>
 #include <assimp/scene.h>
-#include <boost/container_hash/hash.hpp>
 #include <boost/asio/thread_pool.hpp>
+#include <boost/container_hash/hash.hpp>
 #include <boost/unordered_map.hpp>
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <string>
 #include <unordered_map>
-#include <functional>
 
 const static std::string SEPARATOR = " ";
 const static std::string COMMENT_DIRECTIVE = "#";
@@ -29,8 +29,7 @@ const static std::string MAT_INDENT = "    ";
 const static std::string MAT_DIFFUSE_DIRECTIVE = "diffuse";
 const static std::string MAT_EMISSIVE_DIRECTIVE = "emission";
 const static std::string MAT_OPACITY_DIRECTIVE = "alpha";
-const static std::string MAT_SPECULAR_DIRECTIVE
-    = "specular";
+const static std::string MAT_SPECULAR_DIRECTIVE = "specular";
 const static std::string MAT_GLOSSY_DIRECTIVE = "phong";
 const static std::string MAT_SPECULAR_DEFAULT_FUZZY = "0.5";
 const static std::string MAT_DEFAULT_BRIGHTNESS = "1.0";
@@ -115,11 +114,11 @@ class converter {
         bool smooth;
         const aiScene *const _scene;
         std::unordered_map<std::string, std::string> _textures;
-        //std::unordered_map<vertex, std::size_t> _vertices;
-        std::vector<std::vector<std::ostringstream>*> _streams;
-	std::size_t _vertices_count = 0;
+        // std::unordered_map<vertex, std::size_t> _vertices;
+        std::vector<std::vector<std::ostringstream> *> _streams;
+        std::size_t _vertices_count = 0;
         std::vector<std::string> _materials;
-	boost::asio::thread_pool _pool;
+        boost::asio::thread_pool _pool;
 
       public:
         const std::string scene_name;
@@ -174,7 +173,7 @@ class converter {
         void write_material_glossy(const aiMaterial *material);
         void write_glossy_directive(aiColor3D glossy_color);
         void write_glossy_directive(aiColor3D glossy_color,
-                                      const std::string &tex_path);
+                                    const std::string &tex_path);
 
         void write_node(const aiNode *node);
         /*
@@ -203,12 +202,14 @@ class converter {
         void convert_compressed_texture(const std::string &path);
         void convert_compressed_texture(const aiTexture *texture);
         std::filesystem::path texture_path(const std::string &name);
+
       public:
-	static std::filesystem::path texture_path(
-			const std::string &scene_name, const std::string &name);
+        static std::filesystem::path
+        texture_path(const std::string &scene_name, const std::string &name);
         static std::string texture_name(const std::string &path);
-        static void write_texture(const std::string &scene_name, 
-			const std::string &file, const std::string &path);
+        static void write_texture(const std::string &scene_name,
+                                  const std::string &file,
+                                  const std::string &path);
 };
 
 std::ostream &operator<<(std::ostream &stream, const better_float &fl);
@@ -216,6 +217,8 @@ std::ostream &operator<<(std::ostream &stream, const aiColor3D &color);
 std::ostream &operator<<(std::ostream &stream, const aiColor4D &color);
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec);
 std::ostream &operator<<(std::ostream &stream, const aiVector3D &vec);
-std::ostream &operator<<(std::ostream &stream, const math::vector<float, 2> &vec);
-std::ostream &operator<<(std::ostream &stream, const math::vector<float, 3> &vec);
+std::ostream &operator<<(std::ostream &stream,
+                         const math::vector<float, 2> &vec);
+std::ostream &operator<<(std::ostream &stream,
+                         const math::vector<float, 3> &vec);
 #endif
