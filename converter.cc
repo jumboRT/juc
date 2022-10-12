@@ -529,18 +529,11 @@ std::ostream &operator<<(std::ostream &stream, const better_float &fl) {
         std::ostringstream ss;
         ss << std::fixed << fl.value();
         const std::string str = ss.str();
-        return stream << str.substr(0, str.find_last_not_of("0") + 1);
-        /*
-        char buffer[64];
-        int idx = snprintf(buffer, 16, "%.4f", fl.value()) - 1;
-        if (idx < 0)
-                return stream;
-        if (idx >= 64)
-                idx = 63;
-        while (idx > 0 && buffer[idx] == '0')
-                --idx;
-        return stream << std::string_view(buffer, idx);
-        */
+	std::string_view view = str;
+	view = view.substr(0, view.find_last_not_of("0") + 1);
+	if (view.ends_with('.'))
+		view = view.substr(0, view.length() - 1);
+        return stream << view;
 }
 
 std::ostream &operator<<(std::ostream &stream, const aiColor3D &color) {
