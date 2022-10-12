@@ -291,6 +291,7 @@ void converter::write_material(const aiMaterial *material) {
         write_material_diffuse(material);
         write_material_emissive(material);
         write_material_opacity(material);
+        write_material_specular(material);
         if (smooth) {
                 _out << MAT_INDENT << MAT_SMOOTH_DIRECTIVE << "\n";
         }
@@ -380,18 +381,26 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color) {
 }
 
 void converter::write_emissive_directive(aiColor3D emissive_color) {
+	if (emissive_color.r == 0.0f && emissive_color.g == 0.0f
+			&& emissive_color.b == 0.0f)
+		return;
         _out << MAT_INDENT << MAT_EMISSIVE_DIRECTIVE << SEPARATOR
              << MAT_DEFAULT_BRIGHTNESS << SEPARATOR << emissive_color << "\n";
 }
 
 void converter::write_opacity_directive(aiColor4D opacity_color) {
+	if (opacity_color.a == 1.0f)
+		return;
         _out << MAT_INDENT << MAT_OPACITY_DIRECTIVE << SEPARATOR
              << opacity_color << "\n";
 }
 
 void converter::write_specular_directive(aiColor3D specular_color) {
+	if (specular_color.r == 0.0f && specular_color.g == 0.0f
+			&& specular_color.b == 0.0f)
+		return;
         _out << MAT_INDENT << MAT_SPECULAR_DIRECTIVE << SEPARATOR
-             << MAT_SPECULAR_DEFAULT_FUZZY << SEPARATOR << specular_color
+             << BXDF_DEFAULT_WEIGHT << SEPARATOR << specular_color
              << "\n";
 }
 
@@ -409,6 +418,9 @@ void converter::write_diffuse_directive(aiColor3D diffuse_color,
 
 void converter::write_emissive_directive(aiColor3D emissive_color,
                                          const std::string &tex_path) {
+	if (emissive_color.r == 0.0f && emissive_color.g == 0.0f
+			&& emissive_color.b == 0.0f)
+		return;
         if (tex_path.empty()) {
                 write_emissive_directive(emissive_color);
         } else {
@@ -421,6 +433,8 @@ void converter::write_emissive_directive(aiColor3D emissive_color,
 
 void converter::write_opacity_directive(aiColor4D opacity_color,
                                         const std::string &tex_path) {
+	if (opacity_color.a == 1.0f)
+		return;
         if (tex_path.empty()) {
                 write_opacity_directive(opacity_color);
         } else {
@@ -433,11 +447,14 @@ void converter::write_opacity_directive(aiColor4D opacity_color,
 
 void converter::write_specular_directive(aiColor3D specular_color,
                                          const std::string &tex_path) {
+	if (specular_color.r == 0.0f && specular_color.g == 0.0f
+			&& specular_color.b == 0.0f)
+		return;
         if (tex_path.empty()) {
                 write_specular_directive(specular_color);
         } else {
                 _out << MAT_INDENT << MAT_EMISSIVE_DIRECTIVE << SEPARATOR
-                     << MAT_SPECULAR_DEFAULT_FUZZY << SEPARATOR << MAT_FILTER
+                     << BXDF_DEFAULT_WEIGHT << SEPARATOR << MAT_FILTER
                      << SEPARATOR << TEX_PREFIX << _textures[tex_path]
                      << SEPARATOR << specular_color << "\n";
         }
